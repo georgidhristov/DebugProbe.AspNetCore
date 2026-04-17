@@ -17,6 +17,12 @@ public class DebugProbeMiddleware
 
     public async Task Invoke(HttpContext context, RequestStore store)
     {
+        if (context.Request.Path.StartsWithSegments("/debug"))
+        {
+            await _next(context);
+            return;
+        }
+
         context.Request.EnableBuffering();
 
         var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
@@ -35,15 +41,26 @@ public class DebugProbeMiddleware
 
         store.Add(new DebugEntry
         {
+            Id = Guid.NewGuid().ToString(),
+
             Path = context.Request.Path,
             Method = context.Request.Method,
             StatusCode = context.Response.StatusCode,
-            RequestBody = requestBody,
-            ResponseBody = responseBody,
+
+            RequestBody = Trim(requestBody),
+            ResponseBody = Trim(responseBody),
+
             Headers = context.Request.Headers.ToDictionary(x => x.Key, x => x.Value.ToString()),
             Timestamp = DateTime.UtcNow,
+
             Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
             Culture = CultureInfo.CurrentCulture.Name
         });
+    }
+
+    private string Trim(string value, int max = 2000)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        return value.Length <= max ? value : value.Substring(0, max);
     }
 }

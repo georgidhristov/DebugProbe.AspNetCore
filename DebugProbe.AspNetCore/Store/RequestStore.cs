@@ -1,12 +1,18 @@
 ﻿using System.Collections.Concurrent;
 using DebugProbe.AspNetCore.Models;
+using DebugProbe.AspNetCore.Options;
 
 namespace DebugProbe.AspNetCore.Store;
 
 public class RequestStore
 {
     private readonly ConcurrentQueue<DebugEntry> _queue = new();
-    private readonly int _limit = 20;
+    private readonly int _limit;
+
+    public RequestStore(DebugProbeOptions options)
+    {
+        _limit = options.MaxEntries;
+    }
 
     public void Add(DebugEntry entry)
     {
@@ -15,5 +21,13 @@ public class RequestStore
             _queue.TryDequeue(out _);
     }
 
-    public List<DebugEntry> GetAll() => _queue.ToList();
+    public List<DebugEntry> GetAll()
+    {
+        return _queue.ToList();
+    }
+
+    public DebugEntry? Get(string id)
+    {
+        return _queue.FirstOrDefault(x => x.Id == id);
+    }
 }

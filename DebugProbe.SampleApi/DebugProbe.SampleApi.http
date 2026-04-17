@@ -1,0 +1,6 @@
+@DebugProbe.SampleApi_HostAddress = http://localhost:5281
+
+GET {{DebugProbe.SampleApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
