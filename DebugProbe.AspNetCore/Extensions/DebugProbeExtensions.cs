@@ -77,7 +77,13 @@ public static class DebugProbeExtensions
 
                 var diff = Compare(local, remote);
 
-                return Results.Ok(diff);
+                return Results.Ok(new
+                {
+                    status = new { local = local.StatusCode, remote = remote.StatusCode },
+                    environment = new { local = local.Environment, remote = remote.Environment },
+                    culture = new { local = local.Culture, remote = remote.Culture },
+                    diffs = diff
+                });
             }).ExcludeFromDescription();
 
 
@@ -241,8 +247,9 @@ public static class DebugProbeExtensions
 
                         try {
                             const res = await fetch('/debug/compare/' + id + '?url=' + encodeURIComponent(url));
-                            const data = await res.json();
-
+                            const result = await res.json();
+                            const data = result.diffs;
+                            
                             let html = '';
 
                             if (data.length === 0) {
@@ -251,6 +258,24 @@ public static class DebugProbeExtensions
 
                                 // 🔹 GROUPING
                                 const groups = {};
+
+                                groups[""Basic""] = [
+                                    {
+                                        field: ""Status"",
+                                        local: result.status.local,
+                                        remote: result.status.remote
+                                    },
+                                    {
+                                        field: ""Environment"",
+                                        local: result.environment.local,
+                                        remote: result.environment.remote
+                                    },
+                                    {
+                                        field: ""Culture"",
+                                        local: result.culture.local,
+                                        remote: result.culture.remote
+                                    }
+                                ];
 
                                 data.forEach(d => {
                                     const match = d.field.match(/^\[(\d+)\]\.(.+)$/);
@@ -272,10 +297,13 @@ public static class DebugProbeExtensions
                                 html += '<table style=""border-collapse:collapse;width:100%"">';
                                 html += '<tr><th>Field</th><th>Local</th><th>Remote</th></tr>';
 
-                                Object.keys(groups).forEach(index => {
-
+                                [""Basic"", ...Object.keys(groups).filter(k => k !== ""Basic"")]
+                                .sort((a,b) => a - b).forEach(index => {
+                                
                                     html += `<tr style=""background:#eee"">
-                                                <td colspan=""3""><b>Item [${index}]</b></td>
+                                                <td colspan=""3"">
+                                                    <b>${index === ""Basic"" ? ""Basic"" : ""Item ["" + index + ""]""}</b>
+                                                </td>
                                              </tr>`;
 
                                     groups[index].forEach(d => {
@@ -283,8 +311,8 @@ public static class DebugProbeExtensions
 
                                         html += `<tr style=""${changed ? 'background:#fff3cd' : ''}"">
                                             <td style=""padding-left:20px"">${d.field}</td>
-                                            <td style=""color:#e74c3c"">${d.local}</td>
-                                            <td style=""color:#3498db"">${d.remote}</td>
+                                            <td style=""${changed ? 'color:#e74c3c' : ''}"">${d.local}</td>
+                                            <td style=""${changed ? 'color:#3498db' : ''}"">${d.remote}</td>
                                         </tr>`;
                                     });
                                 });
