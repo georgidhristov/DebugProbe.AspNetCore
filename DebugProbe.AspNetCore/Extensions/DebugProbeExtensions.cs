@@ -279,7 +279,9 @@ public static class DebugProbeExtensions
                                              </tr>`;
 
                                     groups[index].forEach(d => {
-                                        html += `<tr>
+                                        const changed = d.local !== d.remote;
+
+                                        html += `<tr style=""${changed ? 'background:#fff3cd' : ''}"">
                                             <td style=""padding-left:20px"">${d.field}</td>
                                             <td style=""color:#e74c3c"">${d.local}</td>
                                             <td style=""color:#3498db"">${d.remote}</td>
