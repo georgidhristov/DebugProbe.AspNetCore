@@ -68,12 +68,24 @@ public static class DebugProbeExtensions
             webApp.MapGet("/debug/compare/{id}", async (string id, string url, RequestStore store) =>
             {
                 var local = store.Get(id);
-                if (local == null) return Results.NotFound("Local not found");
+                if (local == null)
+                    return Results.NotFound("Local trace not found");
 
                 using var http = new HttpClient();
 
-                var remote = await http.GetFromJsonAsync<DebugEntry>(url);
-                if (remote == null) return Results.BadRequest("Remote not found");
+                DebugEntry? remote;
+
+                try
+                {
+                    remote = await http.GetFromJsonAsync<DebugEntry>(url);
+                }
+                catch
+                {
+                    return Results.BadRequest("Failed to reach remote server");
+                }
+
+                if (remote == null)
+                    return Results.NotFound("Remote trace not found");
 
                 var diff = Compare(local, remote);
 
@@ -85,7 +97,6 @@ public static class DebugProbeExtensions
                     diffs = diff
                 });
             }).ExcludeFromDescription();
-
 
             webApp.MapGet("/debug/json/{id}", (string id, RequestStore store) =>
             {
@@ -205,12 +216,13 @@ public static class DebugProbeExtensions
             <p><b>Local:</b> {x.Timestamp.ToLocalTime():HH:mm:ss}</p>
             <p><b>Env:</b> {x.Environment}</p>
             <p><b>Culture:</b> {x.Culture}</p>
+            <p><b>Query:</b> {(string.IsNullOrWhiteSpace(x.Query) ? "&#8211" : System.Net.WebUtility.HtmlEncode(x.Query))}</p>
 
             <h3>Request Body</h3>
-            <pre>{System.Net.WebUtility.HtmlEncode(req)}</pre>
+            <pre>{(string.IsNullOrWhiteSpace(req) ? "(empty)" : System.Net.WebUtility.HtmlEncode(req))}</pre>
 
             <h3>Response Body</h3>
-            <pre>{System.Net.WebUtility.HtmlEncode(res)}</pre>
+            <pre>{(string.IsNullOrWhiteSpace(res) ? "(empty)" : System.Net.WebUtility.HtmlEncode(res))}</pre>
 
             <h3>Headers</h3>
             <table>
@@ -247,6 +259,15 @@ public static class DebugProbeExtensions
 
                         try {
                             const res = await fetch('/debug/compare/' + id + '?url=' + encodeURIComponent(url));
+
+                            if (!res.ok) {
+                                const text = await res.json();
+
+                                document.getElementById('compareResult').innerHTML =
+                                    `<b style=""color:red"">${text || 'Compare failed'}</b>`;
+                                return;
+                            }
+
                             const result = await res.json();
                             const data = result.diffs;
                             
@@ -312,7 +333,7 @@ public static class DebugProbeExtensions
                                         html += `<tr style=""${changed ? 'background:#fff3cd' : ''}"">
                                             <td style=""padding-left:20px"">${d.field}</td>
                                             <td style=""${changed ? 'color:#e74c3c' : ''}"">${d.local}</td>
-                                            <td style=""${changed ? 'color:#3498db' : ''}"">${d.remote}</td>
+                                            <td style=""${changed ? 'color:#e74c3c' : ''}"">${d.remote}</td>
                                         </tr>`;
                                     });
                                 });

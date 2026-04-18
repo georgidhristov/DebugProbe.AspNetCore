@@ -48,6 +48,7 @@ public class DebugProbeMiddleware
             Method = context.Request.Method,
             StatusCode = context.Response.StatusCode,
 
+            Query = context.Request.QueryString.ToString(),
             RequestBody = Trim(requestBody),
             ResponseBody = Trim(responseBody),
 
