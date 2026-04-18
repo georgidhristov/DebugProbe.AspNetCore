@@ -17,7 +17,8 @@ public class DebugProbeMiddleware
 
     public async Task Invoke(HttpContext context, RequestStore store)
     {
-        if (context.Request.Path.StartsWithSegments("/debug"))
+        if (context.Request.Path.StartsWithSegments("/debug") ||
+            context.Request.Path.StartsWithSegments("/favicon"))
         {
             await _next(context);
             return;

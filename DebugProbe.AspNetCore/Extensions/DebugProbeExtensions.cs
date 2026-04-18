@@ -213,7 +213,8 @@ public static class DebugProbeExtensions
 
             <h3>Compare</h3>
 
-            <input id=""compareUrl"" placeholder=""Paste remote /debug/json/{{id}} URL"" style=""width:400px;"" />
+            <input id=""baseUrl"" placeholder=""http://server:port"" style=""width:250px;"" />
+            <input id=""compareId"" placeholder=""trace id"" style=""width:250px;"" />
             <button onclick=""runCompare()"">Compare</button>
 
             <div id=""compareResult"" style=""margin-top:20px;""></div>
@@ -222,48 +223,81 @@ public static class DebugProbeExtensions
             </html>"
             + @"
                 <script>
-                async function runCompare() {
-                    const url = document.getElementById('compareUrl').value;
-                    const id = window.location.pathname.split('/').pop();
+                    async function runCompare() {
+                        const id = window.location.pathname.split('/').pop(); 
+                        const base = document.getElementById('baseUrl').value.trim();
+                        const remoteId = document.getElementById('compareId').value.trim();
 
-                    if (!url) {
-                        alert('Paste URL first');
-                        return;
-                    }
-
-                    document.getElementById('compareResult').innerHTML =
-                        '<b style=""color:orange"">Comparing...</b>';
-
-                    try {
-                        const res = await fetch('/debug/compare/' + id + '?url=' + encodeURIComponent(url));
-                        const data = await res.json();
-
-                        let html = '';
-
-                        if (data.length === 0) {
-                            html = '<b style=""color:green"">No differences</b>';
-                        } else {
-                            html += '<table style=""border-collapse:collapse;width:100%"">';
-                            html += '<tr><th>Field</th><th>Local</th><th>Remote</th></tr>';
-
-                            data.forEach(d => {
-                                html += '<tr>'
-                                    + '<td>' + d.field + '</td>'
-                                    + '<td style=""color:#e74c3c"">' + d.local + '</td>'
-                                    + '<td style=""color:#3498db"">' + d.remote + '</td>'
-                                    + '</tr>';
-                            });
-
-                            html += '</table>';
+                        if (!base || !remoteId) {
+                            alert('Fill both fields');
+                            return;
                         }
 
-                        document.getElementById('compareResult').innerHTML = html;
-                    } catch {
+                        const cleanBase = base.replace(/\/$/, '');
+                        const url = cleanBase + '/debug/json/' + remoteId;
+
                         document.getElementById('compareResult').innerHTML =
-                            '<b style=""color:red"">Error during compare</b>';
+                            '<b style=""color:orange"">Comparing...</b>';
+
+                        try {
+                            const res = await fetch('/debug/compare/' + id + '?url=' + encodeURIComponent(url));
+                            const data = await res.json();
+
+                            let html = '';
+
+                            if (data.length === 0) {
+                                html = '<b style=""color:green"">No differences</b>';
+                            } else {
+
+                                // 🔹 GROUPING
+                                const groups = {};
+
+                                data.forEach(d => {
+                                    const match = d.field.match(/^\[(\d+)\]\.(.+)$/);
+                                    if (!match) return;
+
+                                    const index = match[1];
+                                    const field = match[2];
+
+                                    if (!groups[index]) groups[index] = [];
+
+                                    groups[index].push({
+                                        field,
+                                        local: d.local,
+                                        remote: d.remote
+                                    });
+                                });
+
+                                // 🔹 RENDER
+                                html += '<table style=""border-collapse:collapse;width:100%"">';
+                                html += '<tr><th>Field</th><th>Local</th><th>Remote</th></tr>';
+
+                                Object.keys(groups).forEach(index => {
+
+                                    html += `<tr style=""background:#eee"">
+                                                <td colspan=""3""><b>Item [${index}]</b></td>
+                                             </tr>`;
+
+                                    groups[index].forEach(d => {
+                                        html += `<tr>
+                                            <td style=""padding-left:20px"">${d.field}</td>
+                                            <td style=""color:#e74c3c"">${d.local}</td>
+                                            <td style=""color:#3498db"">${d.remote}</td>
+                                        </tr>`;
+                                    });
+                                });
+
+                                html += '</table>';
+                            }
+
+                            document.getElementById('compareResult').innerHTML = html;
+
+                        } catch {
+                            document.getElementById('compareResult').innerHTML =
+                                '<b style=""color:red"">Error during compare</b>';
+                        }
                     }
-                }
-                </script>
+                    </script>
                 "
             ;
     }
@@ -310,7 +344,12 @@ public static class DebugProbeExtensions
     {
         if (a.ValueKind != b.ValueKind)
         {
-            diffs.Add(new { field = path, local = a.ToString(), remote = b.ToString() });
+            diffs.Add(new
+            {
+                field = path.Replace("ResponseBody", ""),
+                local = a.ToString(),
+                remote = b.ToString()
+            });
             return;
         }
 
@@ -342,7 +381,7 @@ public static class DebugProbeExtensions
                 {
                     diffs.Add(new
                     {
-                        field = path,
+                        field = path.Replace("ResponseBody", ""),
                         local = aVal,
                         remote = bVal
                     });
