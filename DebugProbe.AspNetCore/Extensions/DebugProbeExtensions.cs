@@ -107,43 +107,29 @@ public static class DebugProbeExtensions
 
         return app;
     }
-
-    private static string BuildHtml(List<DebugEntry> items)
+    private static string BuildLayout(string content)
     {
-        var rows = string.Join("", items.Select(x => $@"
-            <tr onclick=""window.location='/debug/{x.Id}'"" style=""cursor:pointer"">
-                <td>{x.Timestamp:HH:mm:ss}</td>
-                <td>{x.Method}</td>
-                <td>{x.Path}</td>
-                <td style=""color:{(x.StatusCode >= 400 ? "#e74c3c" : "#2ecc71")}; font-weight:bold;"">
-                    {x.StatusCode}
-                </td>
-            </tr>"
-        ));
-
         return $@"
-            <html>
+        <html>
             <head>
                 <title>DebugProbe</title>
                 <style>
                     body {{
+                        margin:0;
                         font-family: Arial, sans-serif;
                         background:#f7f7f7;
+                    }}
+
+                    .topbar {{background:#1b1b1b;
+                        color:white;
+                        padding:20px 24px;
+                        font-weight:300;
+                        font-size:18px;
+                        letter-spacing:0.3px;
+                    }}
+
+                    .container {{
                         padding:20px;
-                    }}
-                        
-                    pre {{
-                        max-height: 300px;
-                        overflow: auto;
-                        border-radius: 6px;
-                    }}
-
-                    h2 {{
-                        margin-bottom:20px;
-                    }}
-
-                    h3 {{
-                        margin - top: 25px;
                     }}
 
                     table {{
@@ -167,9 +153,31 @@ public static class DebugProbeExtensions
                     }}
                 </style>
             </head>
-            <body>
-                <h2>DebugProbe</h2>
 
+            <body>
+                <div class='topbar'>
+                    <span>DebugProbe</span>
+                </div>
+                {content}
+            </body>
+        </html>";
+    }
+
+    private static string BuildHtml(List<DebugEntry> items)
+    {
+        var rows = string.Join("", items.Select(x => $@"
+            <tr onclick=""window.location='/debug/{x.Id}'"" style=""cursor:pointer"">
+                <td>{x.Timestamp:HH:mm:ss}</td>
+                <td>{x.Method}</td>
+                <td>{x.Path}</td>
+                <td style=""color:{(x.StatusCode >= 400 ? "#e74c3c" : "#2ecc71")}; font-weight:bold;"">
+                    {x.StatusCode}
+                </td>
+            </tr>"
+        ));
+
+        return BuildLayout($@"
+            <div class='container'>
                 <table>
                     <thead>
                         <tr>
@@ -183,8 +191,8 @@ public static class DebugProbeExtensions
                         {rows}
                     </tbody>
                 </table>
-            </body>
-            </html>";
+            </div>
+        ");
     }
 
     private static string BuildDetailsHtml(DebugEntry x, string req, string res)
@@ -300,7 +308,17 @@ public static class DebugProbeExtensions
 
                                 data.forEach(d => {
                                     const match = d.field.match(/^\[(\d+)\]\.(.+)$/);
-                                    if (!match) return;
+                                    if (!match) {
+                                        if (!groups[""Root""]) groups[""Root""] = [];
+
+                                        groups[""Root""].push({
+                                            field: d.field,
+                                            local: d.local,
+                                            remote: d.remote
+                                        });
+
+                                        return;
+                                    }
 
                                     const index = match[1];
                                     const field = match[2];
@@ -428,15 +446,13 @@ public static class DebugProbeExtensions
                 var aVal = a.ToString();
                 var bVal = b.ToString();
 
-                if (aVal != bVal)
+                diffs.Add(new
                 {
-                    diffs.Add(new
-                    {
-                        field = path.Replace("ResponseBody", ""),
-                        local = aVal,
-                        remote = bVal
-                    });
-                }
+                    field = path.Replace("ResponseBody", ""),
+                    local = aVal,
+                    remote = bVal,
+                    isDiff = aVal != bVal
+                });
                 break;
         }
     }
