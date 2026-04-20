@@ -112,7 +112,10 @@ public static class DebugProbeExtensions
         return $@"
         <html>
             <head>
+                <link rel=""icon"" type=""image/png"" 
+                    href=""https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/refs/heads/master/assets/favicon-32x32.png?token=GHSAT0AAAAAAD2YYWLQBGNQK4FISI7WQO2C2PGPPRA"">
                 <title>DebugProbe</title>
+           
                 <style>
                     body {{
                         margin:0;
@@ -156,7 +159,10 @@ public static class DebugProbeExtensions
 
             <body>
                 <div class='topbar'>
-                    <span>DebugProbe</span>
+                <img src=""https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/refs/heads/master/assets/debugprobe.png?token=GHSAT0AAAAAAD2YYWLQGJJV75FX2SXHEE4Y2PGPPBQ""
+                    style=""height:40px; vertical-align:middle;"" />
+                    <span>debugProbe</span>
+
                 </div>
                 {content}
             </body>
