@@ -113,7 +113,7 @@ public static class DebugProbeExtensions
         <html>
             <head>
                 <link rel=""icon"" type=""image/png"" 
-                    href=""https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/refs/heads/master/assets/favicon-32x32.png?token=GHSAT0AAAAAAD2YYWLQBGNQK4FISI7WQO2C2PGPPRA"">
+                    href=""http://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/refs/heads/master/assets/favicon.ico?token=GHSAT0AAAAAAD2YYWLQMLIKK6VXSECECURC2PGPVSQ"">
                 <title>DebugProbe</title>
            
                 <style>
@@ -125,7 +125,7 @@ public static class DebugProbeExtensions
 
                     .topbar {{background:#1b1b1b;
                         color:white;
-                        padding:20px 24px;
+                        padding:10px 18px;
                         font-weight:300;
                         font-size:18px;
                         letter-spacing:0.3px;
@@ -159,10 +159,9 @@ public static class DebugProbeExtensions
 
             <body>
                 <div class='topbar'>
-                <img src=""https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/refs/heads/master/assets/debugprobe.png?token=GHSAT0AAAAAAD2YYWLQGJJV75FX2SXHEE4Y2PGPPBQ""
+                <img src=""https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/refs/heads/master/assets/logo.png?token=GHSAT0AAAAAAD2YYWLQBYC73ALGPAWAVVLA2PGP4LA""
                     style=""height:40px; vertical-align:middle;"" />
-                    <span>debugProbe</span>
-
+                    <span>DebugProbe</span>
                 </div>
                 {content}
             </body>
