@@ -6,12 +6,18 @@
 		<Nullable>enable</Nullable>
 
 		<PackageId>DebugProbe.AspNetCore</PackageId>
-		<Version>0.0.1</Version>
+		<Version>1.0.0</Version>
+
 		<Authors>GProbe</Authors>
 
-		<Description>ASP.NET Core debug probe for capturing and comparing runtime requests and environment.</Description>
+		<Description>Lightweight ASP.NET Core request/response debugging tool</Description>
 		<PackageTags>aspnetcore;debug;diagnostics;middleware</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
