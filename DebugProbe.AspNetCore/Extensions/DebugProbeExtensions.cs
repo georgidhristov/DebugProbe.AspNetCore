@@ -112,9 +112,10 @@ public static class DebugProbeExtensions
         return $@"
         <html>
             <head>
+                <link href=""https://fonts.googleapis.com/css2?family=Roboto:wght@360;500&display=swap"" rel=""stylesheet"">
                 <link rel=""icon"" type=""image/png"" 
-                    href=""http://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/refs/heads/master/assets/favicon.ico?token=GHSAT0AAAAAAD2YYWLQMLIKK6VXSECECURC2PGPVSQ"">
-                <title>DebugProbe</title>
+                    href=""https://pub-f24242b57f4a47b0abac0d30e074f330.r2.dev/assets/favicon.ico"">
+                <title>DebugProbe UI</title>
            
                 <style>
                     body {{
@@ -123,12 +124,14 @@ public static class DebugProbeExtensions
                         background:#f7f7f7;
                     }}
 
-                    .topbar {{background:#1b1b1b;
+                    .topbar {{
+                        font-family: 'Roboto', sans-serif;
+                        font-weight: 360;
+                        font-size: 20px;
+                        color: #e3e3e3;
+                        background:#1b1b1b;
                         color:white;
-                        padding:10px 18px;
-                        font-weight:300;
-                        font-size:18px;
-                        letter-spacing:0.3px;
+                        padding:17.9px 18px;
                     }}
 
                     .container {{
@@ -159,8 +162,6 @@ public static class DebugProbeExtensions
 
             <body>
                 <div class='topbar'>
-                <img src=""https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/refs/heads/master/assets/logo.png?token=GHSAT0AAAAAAD2YYWLQBYC73ALGPAWAVVLA2PGP4LA""
-                    style=""height:40px; vertical-align:middle;"" />
                     <span>DebugProbe</span>
                 </div>
                 {content}
@@ -208,6 +209,8 @@ public static class DebugProbeExtensions
         return $@"
             <html>
             <head>
+                <link rel=""icon"" type=""image/png"" 
+                    href=""https://pub-f24242b57f4a47b0abac0d30e074f330.r2.dev/assets/favicon.ico"">
                 <title>DebugProbe Details</title>
                 <style>
                     body {{ font-family: Arial; padding:20px; background:#f7f7f7; }}
