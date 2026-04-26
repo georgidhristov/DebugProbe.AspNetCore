@@ -1,13 +1,15 @@
 # DebugProbe.AspNetCore
 
-Debug ASP.NET Core requests and responses instantly. Compare API calls across environments.
+Lightweight tool for inspecting ASP.NET Core HTTP requests and responses.  
+Capture, analyze, and compare API calls directly in your application.
 
 ## Features
 1. Capture HTTP requests & responses
-2. View headers, query, and body
-3. Compare responses between environments
-4. Simple UI endpoint (/debug)
-5. Minimal setup
+2. Inspect headers, query, and body
+3. Pretty JSON formatting
+4. Compare responses across environments
+5. Built-in UI endpoint (/debug)
+6. Minimal setup (no configuration required)
 
 ## Install
 
@@ -17,17 +19,24 @@ Debug ASP.NET Core requests and responses instantly. Compare API calls across en
 
 Register services
 
-      builder.Services.AddDebugProbe();
+    builder.Services.AddDebugProbe();
 
 Add middleware
    
-      app.UseDebugProbe();
+    app.UseDebugProbe();
       
 Open UI
    
-      /debug
+    /debug
 
-Intended for development/debugging only. Do not use in production without restrictions
+Compare responses
+
+    Use the UI to compare a local request with another environment by providing:
+    - Base URL
+    - Trace ID
+
+Intended for development and debugging only.  
+Do not use in production without proper security (authentication, filtering, access control).
 
 License
 
