@@ -1,11 +1,14 @@
 ﻿using System.Globalization;
 using DebugProbe.AspNetCore.Models;
-using DebugProbe.AspNetCore.Store;
+using DebugProbe.AspNetCore.Storage;
 using Microsoft.AspNetCore.Http;
-
 
 namespace DebugProbe.AspNetCore.Middleware;
 
+/// <summary>
+/// Middleware that captures HTTP request and response data and stores it
+/// as DebugEntry for inspection via the DebugProbe UI.
+/// </summary>
 public class DebugProbeMiddleware
 {
     private readonly RequestDelegate _next;
@@ -15,9 +18,11 @@ public class DebugProbeMiddleware
         _next = next;
     }
 
-    public async Task Invoke(HttpContext context, RequestStore store)
+    public async Task Invoke(HttpContext context, DebugEntryStore store)
     {
+        /// Skips DebugProbe endpoints to avoid self-tracking.
         if (context.Request.Path.StartsWithSegments("/debug") ||
+            context.Request.Path.StartsWithSegments("/debugprobe") ||
             context.Request.Path.StartsWithSegments("/favicon"))
         {
             await _next(context);

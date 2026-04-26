@@ -16,6 +16,24 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="Resources\**\*.html" />
+		<EmbeddedResource Include="Resources\**\*.css" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Resources\**\*.html" />
+		<None Remove="Resources\**\*.css" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Resources\js\debugprobe-compare.js" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\js\debugprobe-compare.js" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 

@@ -2,14 +2,17 @@
 using DebugProbe.AspNetCore.Models;
 using DebugProbe.AspNetCore.Options;
 
-namespace DebugProbe.AspNetCore.Store;
+namespace DebugProbe.AspNetCore.Storage;
 
-public class RequestStore
+/// <summary>
+/// In-memory store for DebugEntry instances with a configurable size limit.
+/// </summary>
+public class DebugEntryStore
 {
     private readonly ConcurrentQueue<DebugEntry> _queue = new();
     private readonly int _limit;
 
-    public RequestStore(DebugProbeOptions options)
+    public DebugEntryStore(DebugProbeOptions options)
     {
         _limit = options.MaxEntries;
     }

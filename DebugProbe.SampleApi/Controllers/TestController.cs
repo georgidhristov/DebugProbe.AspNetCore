@@ -13,7 +13,6 @@ namespace DebugProbe.SampleApi.Controllers
             _logger = logger;
         }
 
-        // 1. Basic (your existing)
         [HttpGet("basic")]
         public List<string> Basic(int id)
         {
@@ -21,14 +20,13 @@ namespace DebugProbe.SampleApi.Controllers
                 throw new Exception("Id cannot be 1");
 
             return new List<string>
-        {
-            $"Received id: {id}",
-            $"DateTime: {DateTime.Now}",
-            "Id is not 1"
-        };
+            {
+                $"Received id: {id}",
+                $"DateTime: {DateTime.Now}",
+                "Id is not 1"
+            };
         }
 
-        // 2. Dynamic response (good for diff)
         [HttpGet("dynamic")]
         public object Dynamic(int id)
         {
@@ -50,19 +48,6 @@ namespace DebugProbe.SampleApi.Controllers
             };
         }
 
-        // 3. Based on header (perfect for env diff)
-        [HttpGet("header")]
-        public object FromHeader()
-        {
-            var source = Request.Headers["x-env"].FirstOrDefault();
-
-            if (source == "dev")
-            {
-                return new { Env = "DEV", Debug = true };
-            }
-
-            return new { Env = "PROD", Debug = false };
-        }
 
         [HttpGet("complex")]
         public object Complex(int id)

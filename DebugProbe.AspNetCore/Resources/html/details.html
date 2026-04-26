@@ -1,0 +1,31 @@
+﻿<div class="container">
+
+    <a href="/debug">&#8592; Back</a>
+
+    <h2>{{method}} {{path}}</h2>
+
+    <p><b>Status:</b> {{status}}</p>
+    <p><b>Time:</b> {{time}}</p>
+    <p><b>Local:</b> {{local}}</p>
+    <p><b>Env:</b> {{env}}</p>
+    <p><b>Culture:</b> {{culture}}</p>
+
+    <h3>Request Body</h3>
+    <pre>{{request}}</pre>
+
+    <h3>Response Body</h3>
+    <pre>{{response}}</pre>
+
+    <h3>Headers</h3>
+    <table>{{headers}}</table>
+
+    <h3>Compare</h3>
+
+    <input id="baseUrl" placeholder="http://server:port" />
+    <input id="compareId" placeholder="trace id" />
+    <button onclick="runCompare()">Compare</button>
+
+    <div id="compareResult"></div>
+
+</div>
+

@@ -1,5 +1,4 @@
 using DebugProbe.AspNetCore.Extensions;
-using DebugProbe.AspNetCore.Store;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +10,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDebugProbe(options =>
 {
-    options.MaxEntries = 50;
+    options.MaxEntries = 10;
 });
 
 var app = builder.Build();
