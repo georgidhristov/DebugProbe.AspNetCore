@@ -2,8 +2,14 @@
     {{styles}}
 </head>
 <body>
-    <div class="topbar">DebugProbe</div>
+    <div class="topbar">
+        <span class="title">DebugProbe</span>
+        {{env_block}}
+    </div>
+
+
     {{content}}
 
+    <script src="/debug/ui.js"></script>
     <script src="/debug/compare.js"></script>
 </body>

@@ -7,11 +7,16 @@ namespace DebugProbe.AspNetCore.Internal;
 /// </summary>
 internal class HtmlRenderer
 {
+    public static string Env { get; } = EnvironmentUtils.TryGetEnvironment();
+
     public static string BuildLayout(string content)
     {
+        var envBlock = string.IsNullOrWhiteSpace(Env) ? "" : $"<span class=\"env\">{System.Net.WebUtility.HtmlEncode(Env)}</span>";
+
         return EmbeddedResources.Layout
             .Replace("{{styles}}", $"<style>{EmbeddedResources.Css}</style>")
-            .Replace("{{content}}", content);
+            .Replace("{{content}}", content)
+            .Replace("{{env_block}}", envBlock);
     }
 
     public static string RenderIndexPage(List<DebugEntry> items)
@@ -40,16 +45,21 @@ internal class HtmlRenderer
         var headers = string.Join("", x.Headers.Select(h =>
             $"<tr><td>{h.Key}</td><td>{h.Value}</td></tr>"));
 
+        var pathWithQuery = string.IsNullOrEmpty(x.Query)
+            ? x.Path
+            : $"{x.Path}{x.Query}";
+
         var content = EmbeddedResources.Details
             .Replace("{{method}}", x.Method)
-            .Replace("{{path}}", x.Path)
+            .Replace("{{path}}", pathWithQuery)
             .Replace("{{status}}", x.StatusCode.ToString())
             .Replace("{{time}}", x.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
             .Replace("{{local}}", x.Timestamp.ToLocalTime().ToString("HH:mm:ss"))
             .Replace("{{env}}", x.Environment)
             .Replace("{{culture}}", x.Culture)
-            .Replace("{{request}}", System.Net.WebUtility.HtmlEncode(req))
-            .Replace("{{response}}", System.Net.WebUtility.HtmlEncode(res))
+            .Replace("{{requestUrl}}", System.Net.WebUtility.HtmlEncode(string.IsNullOrEmpty(x.RequestUrl) ? "(empty)" : x.RequestUrl))
+            .Replace("{{request}}", System.Net.WebUtility.HtmlEncode(string.IsNullOrEmpty(req) ? "(empty)" : req))
+            .Replace("{{response}}", System.Net.WebUtility.HtmlEncode(string.IsNullOrEmpty(res) ? "(empty)" : res))
             .Replace("{{headers}}", headers);
 
         return BuildLayout(content);

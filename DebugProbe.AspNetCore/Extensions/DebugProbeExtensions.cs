@@ -105,6 +105,10 @@ public static class DebugProbeExtensions
             webApp.MapGet("/debug/compare.js", () =>
                 Results.Text(EmbeddedResources.CompareJs, "application/javascript")
             ).ExcludeFromDescription();
+
+            webApp.MapGet("/debug/ui.js", () =>
+                Results.Text(EmbeddedResources.UiJs, "application/javascript")
+            ).ExcludeFromDescription();
         }
 
         return app;

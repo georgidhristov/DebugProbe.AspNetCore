@@ -27,10 +27,12 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\js\debugprobe-compare.js" />
+	  <None Remove="Resources\js\debugprobe-ui.js" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\js\debugprobe-compare.js" />
+	  <EmbeddedResource Include="Resources\js\debugprobe-ui.js" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -10,14 +10,23 @@
     <p><b>Env:</b> {{env}}</p>
     <p><b>Culture:</b> {{culture}}</p>
 
+    <h3>Request URL</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <pre>{{requestUrl}}</pre>
+    </div>
+
     <h3>Request Body</h3>
-    <pre>{{request}}</pre>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <pre>{{request}}</pre>
+    </div>
 
     <h3>Response Body</h3>
-    <pre>{{response}}</pre>
-
-    <h3>Headers</h3>
-    <table>{{headers}}</table>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <pre>{{response}}</pre>
+    </div>
 
     <h3>Compare</h3>
 

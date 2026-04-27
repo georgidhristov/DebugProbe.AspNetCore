@@ -5,12 +5,22 @@
 }
 
 .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-family: 'Roboto', sans-serif;
-    font-weight: 400;
     font-size: 20px;
     background: #1b1b1b;
     color: white;
     padding: 18px;
+}
+
+.env {
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: #2d2d2d;
+    opacity: 0.9;
 }
 
 .container {
@@ -37,7 +47,6 @@ tr:hover {
     background: #f1f1f1;
 }
 
-/* HEADINGS */
 h2 {
     margin-bottom: 10px;
 }
@@ -45,6 +54,7 @@ h2 {
 h3 {
     margin-top: 25px;
 }
+
 
 a {
     display: inline-block;
@@ -67,6 +77,29 @@ pre {
     line-height: 1.4;
 }
 
+.code-block {
+    position: relative;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    padding: 4px 8px;
+    background: #2d2d2d;
+    color: #ccc;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+
+}
+
+.copy-btn:hover {
+    background: #3a3a3a;
+}
+
+
 .status-ok {
     color: #2ecc71;
     font-weight: bold;
@@ -76,3 +109,6 @@ pre {
     color: #e74c3c;
     font-weight: bold;
 }
+
+
+
