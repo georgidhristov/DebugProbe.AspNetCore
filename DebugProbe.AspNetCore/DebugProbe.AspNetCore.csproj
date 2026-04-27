@@ -6,39 +6,36 @@
 		<Nullable>enable</Nullable>
 
 		<PackageId>DebugProbe.AspNetCore</PackageId>
-		<Version>1.0.0</Version>
+		<Version>1.1.0</Version>
 
-		<Authors>GProbe</Authors>
-
+		<Authors>Georgi Hristov</Authors>
 		<Description>Lightweight ASP.NET Core request/response debugging tool</Description>
 		<PackageTags>aspnetcore;debug;diagnostics;middleware</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<RepositoryUrl>https://github.com/georgidhristov/DebugProbe.AspNetCore</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageProjectUrl>https://github.com/georgidhristov/DebugProbe.AspNetCore</PackageProjectUrl>
+
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\**\*.html" />
 		<EmbeddedResource Include="Resources\**\*.css" />
+		<EmbeddedResource Include="Resources\js\debugprobe-compare.js" />
+		<EmbeddedResource Include="Resources\js\debugprobe-ui.js" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Remove="Resources\**\*.html" />
 		<None Remove="Resources\**\*.css" />
+		<None Remove="Resources\js\debugprobe-compare.js" />
+		<None Remove="Resources\js\debugprobe-ui.js" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="Resources\js\debugprobe-compare.js" />
-	  <None Remove="Resources\js\debugprobe-ui.js" />
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <EmbeddedResource Include="Resources\js\debugprobe-compare.js" />
-	  <EmbeddedResource Include="Resources\js\debugprobe-ui.js" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
-	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
-	  <FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
-
 </Project>
