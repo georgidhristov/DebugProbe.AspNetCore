@@ -1,4 +1,4 @@
-﻿window.runCompare = async function () {
+window.runCompare = async function () {
     const id = window.location.pathname.split('/').pop();
     const base = document.getElementById('baseUrl').value.trim();
     const remoteId = document.getElementById('compareId').value.trim();
@@ -8,158 +8,100 @@
         return;
     }
 
-    const url = base.replace(/\/$/, '') + '/debug/json/' + remoteId;
-
-    document.getElementById('compareResult').innerHTML =
-        '<b style="color:orange">Comparing...</b>';
+    setCompareResult('<b style="color:orange">Comparing...</b>');
 
     try {
-        const res = await fetch('/debug/compare/' + id + '?url=' + encodeURIComponent(url));
+        const remoteUrl = `${base.replace(/\/$/, '')}/debug/json/${remoteId}`;
+        const res = await fetch(`/debug/compare/${id}?url=${encodeURIComponent(remoteUrl)}`);
 
         if (!res.ok) {
             const text = await res.json();
-            document.getElementById('compareResult').innerHTML =
-                `<b style="color:red">${text || 'Compare failed'}</b>`;
+            setCompareResult(`<b style="color:red">${text || 'Compare failed'}</b>`);
             return;
         }
 
-        const result = await res.json();
-        const data = result.diffs;
-
-        let html = '';
-
-        // -------- SECTIONS --------
-
-        const environment = [
-            { field: "Environment", local: result.environment?.local, remote: result.environment?.remote },
-            { field: "Culture", local: result.culture?.local, remote: result.culture?.remote }
-        ];
-
-        const overview = [
-            { field: "Method", local: result.method?.local, remote: result.method?.remote },
-            { field: "Path", local: result.path?.local, remote: result.path?.remote },
-            { field: "Status", local: result.status?.local, remote: result.status?.remote },
-            { field: "Request Time", local: result.requestTime?.local, remote: result.requestTime?.remote },
-        ];
-
-        function renderSection(title, rows) {
-            let html = `<h3>${title}</h3>`;
-            html += '<table style="border-collapse:collapse;width:100%">';
-            html += '<tr><th>Field</th><th>Local</th><th>Remote</th></tr>';
-
-            rows.forEach(d => {
-                const changed = d.local !== d.remote;
-
-                html += `<tr style="${changed ? 'background:rgba(255,200,0,0.12)' : ''}">
-                    <td>${d.field}</td>
-                    <td style="${changed ? 'color:#e74c3c' : ''}">${d.local ?? ''}</td>
-                    <td style="${changed ? 'color:#e74c3c' : ''}">${d.remote ?? ''}</td>
-                </tr>`;
-            });
-
-            html += '</table>';
-            return html;
-        }
-
-        html += renderSection("Environment", environment);
-        html += renderSection("Overview", overview);
-
-        // -------- REQUEST --------
-
-        const requestChangedFields = data
-            .filter(d => d.type === "request")
-            .map(d => d.field);
-
-        html += '<h3>Request</h3>';
-        html += renderSideBySideJson(result.requestBody, requestChangedFields);
-
-        // -------- RESPONSE --------
-
-        const responseChangedFields = data
-            .filter(d => d.type === "response")
-            .map(d => d.field);
-
-        html += '<h3>Response</h3>';
-        html += renderSideBySideJson(result.responseBody, responseChangedFields);
-
-        document.getElementById('compareResult').innerHTML = html;
-
+        setCompareResult(renderCompare(await res.json()));
     } catch {
-        document.getElementById('compareResult').innerHTML =
-            '<b style="color:red">Error during compare</b>';
+        setCompareResult('<b style="color:red">Error during compare</b>');
     }
 };
 
-// -------- HELPERS --------
-
-function renderSideBySideJson(data, changedFields) {
-    const comparison = buildJsonLineComparison(data?.local || '', data?.remote || '', changedFields);
-
-    return `
-        <div class="json-compare">
-            <div style="flex:1">
-                <b>Local</b>
-                ${renderAlignedJson(comparison.local, data?.local || '')}
-            </div>
-            <div style="flex:1">
-                <b>Remote</b>
-                ${renderAlignedJson(comparison.remote, data?.remote || '')}
-            </div>
-        </div>
-    `;
+function setCompareResult(html) {
+    document.getElementById('compareResult').innerHTML = html;
 }
 
-function buildJsonLineComparison(localJson, remoteJson, changedFields) {
-    const localValue = parseJson(localJson);
-    const remoteValue = parseJson(remoteJson);
+function renderCompare(result) {
+    return [
+        renderSection('Environment', [
+            { field: 'Environment', local: result.environment?.local, remote: result.environment?.remote },
+            { field: 'Culture', local: result.culture?.local, remote: result.culture?.remote }
+        ]),
+        renderSection('Overview', [
+            { field: 'Method', local: result.method?.local, remote: result.method?.remote },
+            { field: 'Path', local: result.path?.local, remote: result.path?.remote },
+            { field: 'Status', local: result.status?.local, remote: result.status?.remote },
+            { field: 'Request Time', local: result.requestTime?.local, remote: result.requestTime?.remote }
+        ]),
+        '<h3>Request</h3>',
+        renderSideBySideJson(result.requestBody),
+        '<h3>Response</h3>',
+        renderSideBySideJson(result.responseBody)
+    ].join('');
+}
 
-    if (localValue.ok || remoteValue.ok) {
-        if (!localValue.ok && !remoteValue.ok) {
-            return emptyJsonComparison();
-        }
+function renderSection(title, rows) {
+    const body = rows.map(row => {
+        const changed = row.local !== row.remote;
+        const rowStyle = changed ? ' style="background:rgba(255,200,0,0.12)"' : '';
+        const valueStyle = changed ? ' style="color:#e74c3c"' : '';
 
-        return buildStructuredJsonComparison(
-            localValue.value,
-            remoteValue.value,
-            localValue.ok,
-            remoteValue.ok
-        );
+        return `<tr${rowStyle}>
+            <td>${escapeHtml(row.field)}</td>
+            <td${valueStyle}>${escapeHtml(row.local ?? '')}</td>
+            <td${valueStyle}>${escapeHtml(row.remote ?? '')}</td>
+        </tr>`;
+    }).join('');
+
+    return `<h3>${escapeHtml(title)}</h3>
+        <table style="border-collapse:collapse;width:100%">
+            <tr><th>Field</th><th>Local</th><th>Remote</th></tr>
+            ${body}
+        </table>`;
+}
+
+function renderSideBySideJson(data) {
+    const localJson = data?.local || '';
+    const remoteJson = data?.remote || '';
+    const comparison = compareJsonBodies(localJson, remoteJson);
+
+    return `<div class="json-compare">
+        <div>
+            <b>Local</b>
+            ${renderAlignedJson(comparison.local, localJson)}
+        </div>
+        <div>
+            <b>Remote</b>
+            ${renderAlignedJson(comparison.remote, remoteJson)}
+        </div>
+    </div>`;
+}
+
+function compareJsonBodies(localJson, remoteJson) {
+    const local = parseJson(localJson);
+    const remote = parseJson(remoteJson);
+
+    if (!local.ok && !remote.ok) {
+        return emptyComparison();
     }
 
-    const localLines = getPrettyJsonLines(localJson);
-    const remoteLines = getPrettyJsonLines(remoteJson);
+    const rows = createRows();
+    appendValue(rows, local.value, remote.value, local.ok, remote.ok, 0, false);
 
-    if (localLines.length === 0 && remoteLines.length === 0) {
-        return emptyJsonComparison();
-    }
-
-    const aligned = alignLines(localLines, remoteLines);
-
-    aligned.local.forEach((line, index) => {
-        const remoteLine = aligned.remote[index];
-
-        if (!line && remoteLine) {
-            aligned.local[index] = { text: '', state: 'missing' };
-            aligned.remote[index] = { text: remoteLine, state: 'added' };
-            return;
-        }
-
-        if (line && !remoteLine) {
-            aligned.local[index] = { text: line, state: 'added' };
-            aligned.remote[index] = { text: '', state: 'missing' };
-            return;
-        }
-
-        const changed = !areSameJsonLineForAlignment(line, remoteLine) || isKnownChangedLine(line, changedFields) || isKnownChangedLine(remoteLine, changedFields);
-        aligned.local[index] = { text: line, state: changed ? 'changed' : '' };
-        aligned.remote[index] = { text: remoteLine, state: changed ? 'changed' : '' };
-    });
-
-    return aligned;
+    return rows;
 }
 
 function parseJson(json) {
-    if (!json || json.trim() === "" || json === "{}") {
+    if (!json || json.trim() === '' || json === '{}') {
         return { ok: false, value: null };
     }
 
@@ -170,379 +112,328 @@ function parseJson(json) {
     }
 }
 
-function emptyJsonComparison() {
+function emptyComparison() {
     return {
         local: [{ text: '(empty)', state: '' }],
         remote: [{ text: '(empty)', state: '' }]
     };
 }
 
-function buildStructuredJsonComparison(localValue, remoteValue, hasLocal, hasRemote) {
-    const local = [];
-    const remote = [];
-    appendValueComparison(localValue, remoteValue, hasLocal, hasRemote, 0, false, local, remote);
-
-    return { local, remote };
+function createRows() {
+    return { local: [], remote: [] };
 }
 
-function appendValueComparison(localValue, remoteValue, hasLocal, hasRemote, depth, trailingComma, local, remote) {
-    if (!hasLocal && hasRemote) {
-        appendAddedOrMissingBlock(remoteValue, depth, trailingComma, 'remote', local, remote);
+function pushPair(rows, localText, remoteText, state = '') {
+    rows.local.push({ text: localText, state });
+    rows.remote.push({ text: remoteText, state });
+}
+
+function pushPresence(rows, value, side, depth, trailingComma) {
+    const isLocal = side === 'local';
+    const lines = stringifyLines(value, depth, trailingComma);
+
+    lines.forEach(line => {
+        rows.local.push({ text: isLocal ? line : '', state: isLocal ? 'added' : 'missing' });
+        rows.remote.push({ text: isLocal ? '' : line, state: isLocal ? 'missing' : 'added' });
+    });
+}
+
+function appendValue(rows, localValue, remoteValue, hasLocal, hasRemote, depth, trailingComma) {
+    if (!hasLocal || !hasRemote) {
+        pushPresence(rows, hasLocal ? localValue : remoteValue, hasLocal ? 'local' : 'remote', depth, trailingComma);
         return;
     }
 
-    if (hasLocal && !hasRemote) {
-        appendAddedOrMissingBlock(localValue, depth, trailingComma, 'local', local, remote);
-        return;
-    }
-
-    if (isPlainObject(localValue) && isPlainObject(remoteValue)) {
-        appendObjectComparison(localValue, remoteValue, depth, trailingComma, local, remote);
+    if (isObject(localValue) && isObject(remoteValue)) {
+        appendObject(rows, localValue, remoteValue, depth, trailingComma);
         return;
     }
 
     if (Array.isArray(localValue) && Array.isArray(remoteValue)) {
-        appendArrayComparison(localValue, remoteValue, depth, trailingComma, local, remote);
+        appendArray(rows, localValue, remoteValue, depth, trailingComma);
+        return;
+    }
+
+    if (isContainer(localValue) || isContainer(remoteValue)) {
+        appendChangedBlocks(rows, localValue, remoteValue, depth, trailingComma);
         return;
     }
 
     const state = jsonEquals(localValue, remoteValue) ? '' : 'changed';
-    local.push({ text: `${indent(depth)}${formatJsonPrimitive(localValue)}${trailingComma ? ',' : ''}`, state });
-    remote.push({ text: `${indent(depth)}${formatJsonPrimitive(remoteValue)}${trailingComma ? ',' : ''}`, state });
+    pushPair(rows, primitiveLine(localValue, depth, trailingComma), primitiveLine(remoteValue, depth, trailingComma), state);
 }
 
-function appendObjectComparison(localValue, remoteValue, depth, trailingComma, local, remote) {
-    const keys = getObjectKeys(localValue, remoteValue);
+function appendObject(rows, localObject, remoteObject, depth, trailingComma) {
+    pushPair(rows, `${indent(depth)}{`, `${indent(depth)}{`);
 
-    local.push({ text: `${indent(depth)}{`, state: '' });
-    remote.push({ text: `${indent(depth)}{`, state: '' });
-
-    keys.forEach((key, index) => {
-        const isLast = index === keys.length - 1;
-        const hasLocalKey = Object.prototype.hasOwnProperty.call(localValue, key);
-        const hasRemoteKey = Object.prototype.hasOwnProperty.call(remoteValue, key);
-        const keyState = hasLocalKey && hasRemoteKey && jsonEquals(localValue[key], remoteValue[key]) ? '' : getPresenceState(hasLocalKey, hasRemoteKey);
-
-        if (isContainerValue(localValue[key]) || isContainerValue(remoteValue[key])) {
-            local.push({
-                text: hasLocalKey ? `${indent(depth + 1)}"${key}": ${getContainerStart(localValue[key])}` : '',
-                state: hasLocalKey ? keyState : 'missing'
-            });
-            remote.push({
-                text: hasRemoteKey ? `${indent(depth + 1)}"${key}": ${getContainerStart(remoteValue[key])}` : '',
-                state: hasRemoteKey ? keyState : 'missing'
-            });
-
-            appendContainerChildren(localValue[key], remoteValue[key], hasLocalKey, hasRemoteKey, depth + 2, local, remote);
-
-            local.push({
-                text: hasLocalKey ? `${indent(depth + 1)}${getContainerEnd(localValue[key])}${isLast ? '' : ','}` : '',
-                state: hasLocalKey ? '' : 'missing'
-            });
-            remote.push({
-                text: hasRemoteKey ? `${indent(depth + 1)}${getContainerEnd(remoteValue[key])}${isLast ? '' : ','}` : '',
-                state: hasRemoteKey ? '' : 'missing'
-            });
-            return;
-        }
-
-        const localText = hasLocalKey ? `${indent(depth + 1)}"${key}": ${formatJsonPrimitive(localValue[key])}${isLast ? '' : ','}` : '';
-        const remoteText = hasRemoteKey ? `${indent(depth + 1)}"${key}": ${formatJsonPrimitive(remoteValue[key])}${isLast ? '' : ','}` : '';
-
-        local.push({ text: localText, state: hasLocalKey ? keyState : 'missing' });
-        remote.push({ text: remoteText, state: hasRemoteKey ? keyState : 'missing' });
+    unionKeys(localObject, remoteObject).forEach((key, index, keys) => {
+        appendProperty(rows, key, localObject, remoteObject, depth + 1, index < keys.length - 1);
     });
 
-    local.push({ text: `${indent(depth)}}${trailingComma ? ',' : ''}`, state: '' });
-    remote.push({ text: `${indent(depth)}}${trailingComma ? ',' : ''}`, state: '' });
+    pushPair(rows, `${indent(depth)}}${trailingComma ? ',' : ''}`, `${indent(depth)}}${trailingComma ? ',' : ''}`);
 }
 
-function appendArrayComparison(localValue, remoteValue, depth, trailingComma, local, remote) {
-    local.push({ text: `${indent(depth)}[`, state: '' });
-    remote.push({ text: `${indent(depth)}[`, state: '' });
-    appendArrayItems(localValue, remoteValue, depth + 1, local, remote);
-    local.push({ text: `${indent(depth)}]${trailingComma ? ',' : ''}`, state: '' });
-    remote.push({ text: `${indent(depth)}]${trailingComma ? ',' : ''}`, state: '' });
-}
+function appendProperty(rows, key, localObject, remoteObject, depth, trailingComma) {
+    const hasLocal = hasOwn(localObject, key);
+    const hasRemote = hasOwn(remoteObject, key);
+    const localValue = hasLocal ? localObject[key] : null;
+    const remoteValue = hasRemote ? remoteObject[key] : null;
 
-function appendContainerChildren(localValue, remoteValue, hasLocal, hasRemote, depth, local, remote) {
-    if (Array.isArray(localValue) || Array.isArray(remoteValue)) {
-        appendArrayItems(hasLocal ? localValue : [], hasRemote ? remoteValue : [], depth, local, remote);
+    if (!hasLocal || !hasRemote) {
+        pushNamedPresence(rows, key, hasLocal ? localValue : remoteValue, hasLocal ? 'local' : 'remote', depth, trailingComma);
         return;
     }
 
-    const keys = getObjectKeys(hasLocal ? localValue : {}, hasRemote ? remoteValue : {});
-    keys.forEach((key, index) => {
-        const isLast = index === keys.length - 1;
-        const hasLocalKey = hasLocal && Object.prototype.hasOwnProperty.call(localValue, key);
-        const hasRemoteKey = hasRemote && Object.prototype.hasOwnProperty.call(remoteValue, key);
-
-        appendNamedValueComparison(
-            key,
-            hasLocalKey ? localValue[key] : null,
-            hasRemoteKey ? remoteValue[key] : null,
-            hasLocalKey,
-            hasRemoteKey,
-            depth,
-            !isLast,
-            local,
-            remote
-        );
-    });
-}
-
-function appendNamedValueComparison(key, localValue, remoteValue, hasLocal, hasRemote, depth, trailingComma, local, remote) {
-    const keyState = hasLocal && hasRemote && jsonEquals(localValue, remoteValue) ? '' : getPresenceState(hasLocal, hasRemote);
-
-    if (isContainerValue(localValue) || isContainerValue(remoteValue)) {
-        local.push({
-            text: hasLocal ? `${indent(depth)}"${key}": ${getContainerStart(localValue)}` : '',
-            state: hasLocal ? keyState : 'missing'
+    if (isObject(localValue) && isObject(remoteValue)) {
+        pushPair(rows, `${indent(depth)}"${key}": {`, `${indent(depth)}"${key}": {`, jsonEquals(localValue, remoteValue) ? '' : 'changed');
+        unionKeys(localValue, remoteValue).forEach((childKey, index, keys) => {
+            appendProperty(rows, childKey, localValue, remoteValue, depth + 1, index < keys.length - 1);
         });
-        remote.push({
-            text: hasRemote ? `${indent(depth)}"${key}": ${getContainerStart(remoteValue)}` : '',
-            state: hasRemote ? keyState : 'missing'
-        });
-
-        appendContainerChildren(localValue, remoteValue, hasLocal, hasRemote, depth + 1, local, remote);
-
-        local.push({
-            text: hasLocal ? `${indent(depth)}${getContainerEnd(localValue)}${trailingComma ? ',' : ''}` : '',
-            state: hasLocal ? '' : 'missing'
-        });
-        remote.push({
-            text: hasRemote ? `${indent(depth)}${getContainerEnd(remoteValue)}${trailingComma ? ',' : ''}` : '',
-            state: hasRemote ? '' : 'missing'
-        });
+        pushPair(rows, `${indent(depth)}}${trailingComma ? ',' : ''}`, `${indent(depth)}}${trailingComma ? ',' : ''}`);
         return;
     }
 
-    local.push({
-        text: hasLocal ? `${indent(depth)}"${key}": ${formatJsonPrimitive(localValue)}${trailingComma ? ',' : ''}` : '',
-        state: hasLocal ? keyState : 'missing'
-    });
-    remote.push({
-        text: hasRemote ? `${indent(depth)}"${key}": ${formatJsonPrimitive(remoteValue)}${trailingComma ? ',' : ''}` : '',
-        state: hasRemote ? keyState : 'missing'
+    if (Array.isArray(localValue) && Array.isArray(remoteValue)) {
+        pushPair(rows, `${indent(depth)}"${key}": [`, `${indent(depth)}"${key}": [`, jsonEquals(localValue, remoteValue) ? '' : 'changed');
+        appendArrayItems(rows, localValue, remoteValue, depth + 1);
+        pushPair(rows, `${indent(depth)}]${trailingComma ? ',' : ''}`, `${indent(depth)}]${trailingComma ? ',' : ''}`);
+        return;
+    }
+
+    if (isContainer(localValue) || isContainer(remoteValue)) {
+        appendChangedNamedBlocks(rows, key, localValue, remoteValue, depth, trailingComma);
+        return;
+    }
+
+    const state = jsonEquals(localValue, remoteValue) ? '' : 'changed';
+    pushPair(rows, propertyLine(key, localValue, depth, trailingComma), propertyLine(key, remoteValue, depth, trailingComma), state);
+}
+
+function appendArray(rows, localArray, remoteArray, depth, trailingComma) {
+    pushPair(rows, `${indent(depth)}[`, `${indent(depth)}[`);
+    appendArrayItems(rows, localArray, remoteArray, depth + 1);
+    pushPair(rows, `${indent(depth)}]${trailingComma ? ',' : ''}`, `${indent(depth)}]${trailingComma ? ',' : ''}`);
+}
+
+function appendArrayItems(rows, localArray, remoteArray, depth) {
+    alignArrayItems(localArray, remoteArray).forEach((pair, index, pairs) => {
+        appendValue(rows, pair.local, pair.remote, pair.hasLocal, pair.hasRemote, depth, index < pairs.length - 1);
     });
 }
 
-function appendArrayItems(localItems, remoteItems, depth, local, remote) {
-    const pairs = alignArrayItems(localItems, remoteItems);
-
-    pairs.forEach((pair, index) => {
-        appendValueComparison(
-            pair.localValue,
-            pair.remoteValue,
-            pair.hasLocal,
-            pair.hasRemote,
-            depth,
-            index < pairs.length - 1,
-            local,
-            remote
-        );
-    });
-}
-
-function alignArrayItems(localItems, remoteItems) {
-    const table = buildArrayLcsTable(localItems, remoteItems);
+function alignArrayItems(localArray, remoteArray) {
     const pairs = [];
-    let i = 0;
-    let j = 0;
+    let localIndex = 0;
+    let remoteIndex = 0;
 
-    while (i < localItems.length || j < remoteItems.length) {
-        if (i < localItems.length && j < remoteItems.length && jsonEquals(localItems[i], remoteItems[j])) {
-            pairs.push({ localValue: localItems[i], remoteValue: remoteItems[j], hasLocal: true, hasRemote: true });
-            i++;
-            j++;
+    while (localIndex < localArray.length || remoteIndex < remoteArray.length) {
+        if (localIndex < localArray.length && remoteIndex < remoteArray.length && jsonEquals(localArray[localIndex], remoteArray[remoteIndex])) {
+            pairs.push(pair(localArray[localIndex], remoteArray[remoteIndex], true, true));
+            localIndex++;
+            remoteIndex++;
             continue;
         }
 
-        const localStart = i;
-        const remoteStart = j;
+        const localStart = localIndex;
+        const remoteStart = remoteIndex;
+        const next = findNextEqualItem(localArray, remoteArray, localIndex, remoteIndex);
 
-        while (i < localItems.length || j < remoteItems.length) {
-            if (i < localItems.length && j < remoteItems.length && jsonEquals(localItems[i], remoteItems[j])) {
-                break;
-            }
+        localIndex = next.localIndex;
+        remoteIndex = next.remoteIndex;
 
-            if (j >= remoteItems.length || (i < localItems.length && table[i + 1][j] >= table[i][j + 1])) {
-                i++;
-            } else {
-                j++;
-            }
-        }
-
-        appendUnmatchedArrayItems(
-            localItems.slice(localStart, i),
-            remoteItems.slice(remoteStart, j),
-            pairs
+        appendUnmatchedItems(
+            pairs,
+            localArray.slice(localStart, localIndex),
+            remoteArray.slice(remoteStart, remoteIndex)
         );
     }
 
     return pairs;
 }
 
-function appendUnmatchedArrayItems(localItems, remoteItems, pairs) {
+function findNextEqualItem(localArray, remoteArray, localStart, remoteStart) {
+    let best = { localIndex: localArray.length, remoteIndex: remoteArray.length, distance: Number.MAX_SAFE_INTEGER };
+
+    for (let i = localStart; i < localArray.length; i++) {
+        for (let j = remoteStart; j < remoteArray.length; j++) {
+            if (!jsonEquals(localArray[i], remoteArray[j])) {
+                continue;
+            }
+
+            const distance = (i - localStart) + (j - remoteStart);
+            if (distance < best.distance) {
+                best = { localIndex: i, remoteIndex: j, distance };
+            }
+        }
+    }
+
+    return best;
+}
+
+function appendUnmatchedItems(pairs, localItems, remoteItems) {
     const sharedCount = Math.min(localItems.length, remoteItems.length);
     const extraRemoteCount = Math.max(0, remoteItems.length - localItems.length);
     const extraLocalCount = Math.max(0, localItems.length - remoteItems.length);
-    const remoteOffset = extraRemoteCount > 0
-        ? findBestArrayAlignmentOffset(localItems, remoteItems, extraRemoteCount)
-        : 0;
-    const localOffset = extraLocalCount > 0
-        ? findBestArrayAlignmentOffset(remoteItems, localItems, extraLocalCount)
-        : 0;
+    const remoteOffset = extraRemoteCount > 0 ? bestOffset(localItems, remoteItems, extraRemoteCount) : 0;
+    const localOffset = extraLocalCount > 0 ? bestOffset(remoteItems, localItems, extraLocalCount) : 0;
 
     for (let i = 0; i < remoteOffset; i++) {
-        pairs.push({ localValue: null, remoteValue: remoteItems[i], hasLocal: false, hasRemote: true });
+        pairs.push(pair(null, remoteItems[i], false, true));
     }
 
     for (let i = 0; i < localOffset; i++) {
-        pairs.push({ localValue: localItems[i], remoteValue: null, hasLocal: true, hasRemote: false });
+        pairs.push(pair(localItems[i], null, true, false));
     }
 
     for (let i = 0; i < sharedCount; i++) {
-        pairs.push({
-            localValue: localItems[localOffset + i],
-            remoteValue: remoteItems[remoteOffset + i],
-            hasLocal: true,
-            hasRemote: true
-        });
+        pairs.push(pair(localItems[localOffset + i], remoteItems[remoteOffset + i], true, true));
     }
 
     for (let i = remoteOffset + sharedCount; i < remoteItems.length; i++) {
-        pairs.push({ localValue: null, remoteValue: remoteItems[i], hasLocal: false, hasRemote: true });
+        pairs.push(pair(null, remoteItems[i], false, true));
     }
 
     for (let i = localOffset + sharedCount; i < localItems.length; i++) {
-        pairs.push({ localValue: localItems[i], remoteValue: null, hasLocal: true, hasRemote: false });
+        pairs.push(pair(localItems[i], null, true, false));
     }
 }
 
-function findBestArrayAlignmentOffset(shorterItems, longerItems, extraCount) {
-    let bestOffset = 0;
-    let bestScore = Number.NEGATIVE_INFINITY;
+function bestOffset(shorterItems, longerItems, extraCount) {
+    let offset = 0;
+    let score = Number.NEGATIVE_INFINITY;
 
-    for (let offset = 0; offset <= extraCount; offset++) {
-        let score = 0;
+    for (let i = 0; i <= extraCount; i++) {
+        const currentScore = shorterItems.reduce(
+            (sum, item, index) => sum + similarity(item, longerItems[i + index]),
+            0
+        );
 
-        for (let i = 0; i < shorterItems.length; i++) {
-            score += getArrayItemSimilarity(shorterItems[i], longerItems[offset + i]);
-        }
-
-        if (score > bestScore) {
-            bestScore = score;
-            bestOffset = offset;
+        if (currentScore > score) {
+            score = currentScore;
+            offset = i;
         }
     }
 
-    return bestOffset;
+    return offset;
 }
 
-function getArrayItemSimilarity(localValue, remoteValue) {
+function similarity(localValue, remoteValue) {
     if (jsonEquals(localValue, remoteValue)) {
         return 1000;
     }
 
     if (Array.isArray(localValue) && Array.isArray(remoteValue)) {
-        const length = Math.min(localValue.length, remoteValue.length);
-        let score = 10 - Math.abs(localValue.length - remoteValue.length);
-
-        for (let i = 0; i < length; i++) {
-            score += getArrayItemSimilarity(localValue[i], remoteValue[i]);
-        }
-
-        return score;
+        return localValue.reduce(
+            (score, item, index) => score + similarity(item, remoteValue[index]),
+            10 - Math.abs(localValue.length - remoteValue.length)
+        );
     }
 
-    if (isPlainObject(localValue) && isPlainObject(remoteValue)) {
-        const keys = getObjectKeys(localValue, remoteValue);
-        let score = 20;
-
-        keys.forEach(key => {
-            const hasLocal = Object.prototype.hasOwnProperty.call(localValue, key);
-            const hasRemote = Object.prototype.hasOwnProperty.call(remoteValue, key);
-
-            if (hasLocal && hasRemote) {
-                score += 5;
-                score += jsonEquals(localValue[key], remoteValue[key]) ? 20 : getArrayItemSimilarity(localValue[key], remoteValue[key]);
-            } else {
-                score -= 5;
+    if (isObject(localValue) && isObject(remoteValue)) {
+        return unionKeys(localValue, remoteValue).reduce((score, key) => {
+            if (!hasOwn(localValue, key) || !hasOwn(remoteValue, key)) {
+                return score - 5;
             }
-        });
 
-        return score;
+            return score + 5 + (jsonEquals(localValue[key], remoteValue[key]) ? 20 : similarity(localValue[key], remoteValue[key]));
+        }, 20);
     }
 
     return typeof localValue === typeof remoteValue ? 1 : -10;
 }
 
-function buildArrayLcsTable(localItems, remoteItems) {
-    const table = Array.from({ length: localItems.length + 1 }, () => Array(remoteItems.length + 1).fill(0));
-
-    for (let i = localItems.length - 1; i >= 0; i--) {
-        for (let j = remoteItems.length - 1; j >= 0; j--) {
-            table[i][j] = jsonEquals(localItems[i], remoteItems[j])
-                ? table[i + 1][j + 1] + 1
-                : Math.max(table[i + 1][j], table[i][j + 1]);
-        }
-    }
-
-    return table;
+function pair(local, remote, hasLocal, hasRemote) {
+    return { local, remote, hasLocal, hasRemote };
 }
 
-function appendAddedOrMissingBlock(value, depth, trailingComma, side, local, remote) {
+function pushNamedPresence(rows, key, value, side, depth, trailingComma) {
+    const lines = stringifyLines(value, depth, trailingComma, `"${key}": `);
+    const isLocal = side === 'local';
+
+    lines.forEach(line => {
+        rows.local.push({ text: isLocal ? line : '', state: isLocal ? 'added' : 'missing' });
+        rows.remote.push({ text: isLocal ? '' : line, state: isLocal ? 'missing' : 'added' });
+    });
+}
+
+function appendChangedBlocks(rows, localValue, remoteValue, depth, trailingComma) {
+    const localLines = stringifyLines(localValue, depth, trailingComma);
+    const remoteLines = stringifyLines(remoteValue, depth, trailingComma);
+    const count = Math.max(localLines.length, remoteLines.length);
+
+    for (let i = 0; i < count; i++) {
+        rows.local.push({ text: localLines[i] || '', state: localLines[i] ? 'changed' : 'missing' });
+        rows.remote.push({ text: remoteLines[i] || '', state: remoteLines[i] ? 'changed' : 'missing' });
+    }
+}
+
+function appendChangedNamedBlocks(rows, key, localValue, remoteValue, depth, trailingComma) {
+    const localLines = stringifyLines(localValue, depth, trailingComma, `"${key}": `);
+    const remoteLines = stringifyLines(remoteValue, depth, trailingComma, `"${key}": `);
+    const count = Math.max(localLines.length, remoteLines.length);
+
+    for (let i = 0; i < count; i++) {
+        rows.local.push({ text: localLines[i] || '', state: localLines[i] ? 'changed' : 'missing' });
+        rows.remote.push({ text: remoteLines[i] || '', state: remoteLines[i] ? 'changed' : 'missing' });
+    }
+}
+
+function stringifyLines(value, depth, trailingComma, firstLinePrefix = '') {
     const lines = JSON.stringify(value, null, 2).split('\n');
 
-    lines.forEach((line, index) => {
-        const text = `${indent(depth)}${line}${index === lines.length - 1 && trailingComma ? ',' : ''}`;
-        const isLocal = side === 'local';
-
-        local.push({ text: isLocal ? text : '', state: isLocal ? 'added' : 'missing' });
-        remote.push({ text: isLocal ? '' : text, state: isLocal ? 'missing' : 'added' });
+    return lines.map((line, index) => {
+        const prefix = index === 0 ? firstLinePrefix : '';
+        const comma = index === lines.length - 1 && trailingComma ? ',' : '';
+        return `${indent(depth)}${prefix}${line}${comma}`;
     });
 }
 
-function getObjectKeys(localValue, remoteValue) {
-    const keys = [];
+function renderAlignedJson(lines, originalJson) {
+    const content = lines.map(line => {
+        const className = line.state ? `diff-line diff-line-${line.state}` : '';
+        const text = line.text ? escapeHtml(line.text) : '&nbsp;';
 
-    Object.keys(localValue || {}).forEach(key => keys.push(key));
-    Object.keys(remoteValue || {}).forEach(key => {
-        if (!keys.includes(key)) {
-            keys.push(key);
-        }
-    });
+        return `<div class="${className}">${text}</div>`;
+    }).join('');
 
-    return keys;
+    return `<div class="code-block">
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        <pre data-copy="${escapeHtml(formatCopyValue(originalJson, lines))}">${content}</pre>
+    </div>`;
 }
 
-function isContainerValue(value) {
-    return Array.isArray(value) || isPlainObject(value);
-}
+function formatCopyValue(json, lines) {
+    const parsed = parseJson(json);
 
-function isPlainObject(value) {
-    return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function getContainerStart(value) {
-    return Array.isArray(value) ? '[' : '{';
-}
-
-function getContainerEnd(value) {
-    return Array.isArray(value) ? ']' : '}';
-}
-
-function getPresenceState(hasLocal, hasRemote) {
-    if (hasLocal && hasRemote) {
-        return 'changed';
+    if (parsed.ok) {
+        return JSON.stringify(parsed.value, null, 2);
     }
 
-    return hasLocal ? 'added' : 'added';
+    return lines.map(line => line.text).join('\n');
 }
 
-function formatJsonPrimitive(value) {
-    return JSON.stringify(value);
+function propertyLine(key, value, depth, trailingComma) {
+    return `${indent(depth)}"${key}": ${JSON.stringify(value)}${trailingComma ? ',' : ''}`;
+}
+
+function primitiveLine(value, depth, trailingComma) {
+    return `${indent(depth)}${JSON.stringify(value)}${trailingComma ? ',' : ''}`;
+}
+
+function unionKeys(localObject, remoteObject) {
+    return [...new Set([...Object.keys(localObject || {}), ...Object.keys(remoteObject || {})])];
+}
+
+function hasOwn(value, key) {
+    return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function isContainer(value) {
+    return Array.isArray(value) || isObject(value);
+}
+
+function isObject(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function jsonEquals(localValue, remoteValue) {
@@ -551,170 +442,6 @@ function jsonEquals(localValue, remoteValue) {
 
 function indent(depth) {
     return '  '.repeat(depth);
-}
-
-function getPrettyJsonLines(json) {
-    if (!json || json.trim() === "" || json === "{}") {
-        return [];
-    }
-
-    try {
-        const obj = JSON.parse(json);
-        const pretty = JSON.stringify(obj, null, 2);
-
-        if (!pretty || pretty === "{}") {
-            return [];
-        }
-
-        return pretty.split('\n');
-    } catch {
-        return [];
-    }
-}
-
-function alignLines(localLines, remoteLines) {
-    const table = buildLcsTable(localLines, remoteLines);
-    const local = [];
-    const remote = [];
-    let localIndex = 0;
-    let remoteIndex = 0;
-
-    while (localIndex < localLines.length || remoteIndex < remoteLines.length) {
-        if (localIndex < localLines.length && remoteIndex < remoteLines.length && areSameJsonLineForAlignment(localLines[localIndex], remoteLines[remoteIndex])) {
-            local.push(localLines[localIndex]);
-            remote.push(remoteLines[remoteIndex]);
-            localIndex++;
-            remoteIndex++;
-            continue;
-        }
-
-        const localStart = localIndex;
-        const remoteStart = remoteIndex;
-
-        while (localIndex < localLines.length || remoteIndex < remoteLines.length) {
-            if (localIndex < localLines.length && remoteIndex < remoteLines.length && areSameJsonLineForAlignment(localLines[localIndex], remoteLines[remoteIndex])) {
-                break;
-            }
-
-            if (remoteIndex >= remoteLines.length || (localIndex < localLines.length && table[localIndex + 1][remoteIndex] >= table[localIndex][remoteIndex + 1])) {
-                localIndex++;
-            } else {
-                remoteIndex++;
-            }
-        }
-
-        appendChangedBlock(
-            localLines.slice(localStart, localIndex),
-            remoteLines.slice(remoteStart, remoteIndex),
-            local,
-            remote
-        );
-    }
-
-    return { local, remote };
-}
-
-function buildLcsTable(localLines, remoteLines) {
-    const table = Array.from({ length: localLines.length + 1 }, () => Array(remoteLines.length + 1).fill(0));
-
-    for (let i = localLines.length - 1; i >= 0; i--) {
-        for (let j = remoteLines.length - 1; j >= 0; j--) {
-            table[i][j] = areSameJsonLineForAlignment(localLines[i], remoteLines[j])
-                ? table[i + 1][j + 1] + 1
-                : Math.max(table[i + 1][j], table[i][j + 1]);
-        }
-    }
-
-    return table;
-}
-
-function appendChangedBlock(localBlock, remoteBlock, local, remote) {
-    const matchedRemoteIndexes = new Set();
-
-    localBlock.forEach(localLine => {
-        const remoteIndex = remoteBlock.findIndex((remoteLine, index) =>
-            !matchedRemoteIndexes.has(index) && areComparableJsonLines(localLine, remoteLine));
-
-        if (remoteIndex >= 0) {
-            matchedRemoteIndexes.add(remoteIndex);
-            local.push(localLine);
-            remote.push(remoteBlock[remoteIndex]);
-        } else {
-            local.push(localLine);
-            remote.push(null);
-        }
-    });
-
-    remoteBlock.forEach((remoteLine, index) => {
-        if (matchedRemoteIndexes.has(index)) {
-            return;
-        }
-
-        local.push(null);
-        remote.push(remoteLine);
-    });
-}
-
-function areComparableJsonLines(localLine, remoteLine) {
-    const localKey = getJsonLineKey(localLine);
-    const remoteKey = getJsonLineKey(remoteLine);
-
-    if (localKey || remoteKey) {
-        return localKey === remoteKey;
-    }
-
-    return getJsonLineShape(localLine) === getJsonLineShape(remoteLine);
-}
-
-function areSameJsonLineForAlignment(localLine, remoteLine) {
-    return normalizeJsonLineForAlignment(localLine) === normalizeJsonLineForAlignment(remoteLine);
-}
-
-function normalizeJsonLineForAlignment(line) {
-    return (line || '').replace(/,\s*$/, '');
-}
-
-function getJsonLineKey(line) {
-    const match = line?.match(/^\s*"([^"]+)"\s*:/);
-    return match ? match[1] : '';
-}
-
-function getJsonLineShape(line) {
-    return (line || '').trim().replace(/"([^"\\]|\\.)*"/g, '""').replace(/-?\d+(\.\d+)?/g, '0');
-}
-
-function isKnownChangedLine(line, changedFields) {
-    return changedFields.some(f => {
-        const key = f.split('.').pop().replace(/\[\d+\]/g, '');
-        return key && line.includes(`"${key}"`);
-    });
-}
-
-function renderAlignedJson(lines, originalJson) {
-    const copyValue = getCopyValue(originalJson, lines);
-    const content = lines.map(line => {
-        const className = line.state ? `diff-line diff-line-${line.state}` : '';
-        const text = line.text ? escapeHtml(line.text) : '&nbsp;';
-
-        return `<div class="${className}">${text}</div>`;
-    }).join('');
-
-    return `
-        <div class="code-block">
-            <button class="copy-btn" onclick="copyText(this)">Copy</button>
-            <pre data-copy="${escapeHtml(copyValue)}">${content}</pre>
-        </div>
-    `;
-}
-
-function getCopyValue(json, renderedLines) {
-    const prettyLines = getPrettyJsonLines(json);
-
-    if (prettyLines.length > 0) {
-        return prettyLines.join('\n');
-    }
-
-    return renderedLines.map(line => line.text).join('\n');
 }
 
 function escapeHtml(value) {

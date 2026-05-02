@@ -69,7 +69,9 @@ public static class DebugProbeExtensions
             {
                 var local = store.Get(id);
                 if (local is null)
+                {
                     return Results.NotFound("Local trace not found");
+                }
 
                 DebugEntry? remote;
 
@@ -83,7 +85,9 @@ public static class DebugProbeExtensions
                 }
 
                 if (remote is null)
+                {
                     return Results.NotFound("Remote trace not found");
+                }
 
                 var diff = DebugEntryComparer.Compare(local, remote);
 
@@ -101,8 +105,6 @@ public static class DebugProbeExtensions
 
                     environment = new { local = local.Environment, remote = remote.Environment },
                     culture = new { local = local.Culture, remote = remote.Culture },
-                 
-
                     requestBody = new { local = local.RequestBody ?? "", remote = remote.RequestBody ?? "" },
                     responseBody = new { local = local.ResponseBody ?? "", remote = remote.ResponseBody ?? "" },
 
@@ -130,43 +132,31 @@ public static class DebugProbeExtensions
                 return Results.Ok();
             }).ExcludeFromDescription();
 
-            webApp.Map("/debug/logo.png", async ctx =>
-            {
-                ctx.Response.ContentType = "image/png";
+            webApp.Map("/debug/logo.png", ctx =>
+                WriteEmbeddedAsset(ctx, "DebugProbe.AspNetCore.Assets.logo.PNG", "image/png")
+            ).ExcludeFromDescription();
 
-                var asm = typeof(DebugProbeMiddleware).Assembly;
-                using var stream = asm.GetManifestResourceStream("DebugProbe.AspNetCore.Assets.logo.PNG");
-
-                if (stream == null)
-                {
-                    ctx.Response.StatusCode = 404;
-                    return;
-                }
-
-                using var ms = new MemoryStream();
-                await stream.CopyToAsync(ms);
-                var bytes = ms.ToArray();
-
-                await ctx.Response.Body.WriteAsync(bytes);
-            }).ExcludeFromDescription();
-
-            webApp.Map("/debug/favicon.ico", async ctx =>
-            {
-                ctx.Response.ContentType = "image/x-icon";
-
-                var asm = typeof(DebugProbeMiddleware).Assembly;
-                using var stream = asm.GetManifestResourceStream("DebugProbe.AspNetCore.Assets.favicon.ico");
-
-                if (stream == null)
-                {
-                    ctx.Response.StatusCode = 404;
-                    return;
-                }
-
-                await stream.CopyToAsync(ctx.Response.Body);
-            }).ExcludeFromDescription(); ;
+            webApp.Map("/debug/favicon.ico", ctx =>
+                WriteEmbeddedAsset(ctx, "DebugProbe.AspNetCore.Assets.favicon.ico", "image/x-icon")
+            ).ExcludeFromDescription();
         }
 
         return app;
+    }
+
+    private static async Task WriteEmbeddedAsset(HttpContext ctx, string resourceName, string contentType)
+    {
+        ctx.Response.ContentType = contentType;
+
+        var assembly = typeof(DebugProbeMiddleware).Assembly;
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+
+        if (stream is null)
+        {
+            ctx.Response.StatusCode = 404;
+            return;
+        }
+
+        await stream.CopyToAsync(ctx.Response.Body);
     }
 }

@@ -9,148 +9,63 @@ namespace DebugProbe.AspNetCore.Internal;
 /// </summary>
 internal static class DebugEntryComparer
 {
+    private const string RequestBodyPath = "RequestBody";
+    private const string ResponseBodyPath = "ResponseBody";
+
     public static List<object> Compare(DebugEntry a, DebugEntry b)
     {
         var diffs = new List<object>();
 
-        // --- Basic differences ---
         if (a.StatusCode != b.StatusCode)
-            diffs.Add(new { field = "Status", local = a.StatusCode, remote = b.StatusCode, type = "meta" });
+            AddDiff(diffs, "Status", a.StatusCode, b.StatusCode, "meta");
 
         if (a.Environment != b.Environment)
-            diffs.Add(new { field = "Environment", local = a.Environment, remote = b.Environment, type = "meta" });
+            AddDiff(diffs, "Environment", a.Environment, b.Environment, "meta");
 
         if (a.Culture != b.Culture)
-            diffs.Add(new { field = "Culture", local = a.Culture, remote = b.Culture, type = "meta" });
+            AddDiff(diffs, "Culture", a.Culture, b.Culture, "meta");
 
-        // --- Request JSON diff ---
-        if (!string.IsNullOrWhiteSpace(a.RequestBody) || !string.IsNullOrWhiteSpace(b.RequestBody))
-        {
-            try
-            {
-                using var localJson = JsonDocument.Parse(a.RequestBody ?? "{}");
-                using var remoteJson = JsonDocument.Parse(b.RequestBody ?? "{}");
+        CompareBody(a.RequestBody, b.RequestBody, RequestBodyPath, diffs);
+        CompareBody(a.ResponseBody, b.ResponseBody, ResponseBodyPath, diffs);
 
-                CompareJson(localJson.RootElement, remoteJson.RootElement, "RequestBody", diffs);
-            }
-            catch
-            {
-                if (a.RequestBody != b.RequestBody)
-                {
-                    diffs.Add(new
-                    {
-                        field = "RequestBody",
-                        local = a.RequestBody,
-                        remote = b.RequestBody,
-                        type = "request"
-                    });
-                }
-            }
-        }
+        return diffs;
+    }
 
-        // --- Response JSON diff ---
+    private static void CompareBody(string? localBody, string? remoteBody, string path, List<object> diffs)
+    {
+        if (string.IsNullOrWhiteSpace(localBody) && string.IsNullOrWhiteSpace(remoteBody))
+            return;
+
         try
         {
-            using var localJson = JsonDocument.Parse(a.ResponseBody);
-            using var remoteJson = JsonDocument.Parse(b.ResponseBody);
+            using var localJson = JsonDocument.Parse(localBody ?? "{}");
+            using var remoteJson = JsonDocument.Parse(remoteBody ?? "{}");
 
-            CompareJson(localJson.RootElement, remoteJson.RootElement, "ResponseBody", diffs);
+            CompareJson(localJson.RootElement, remoteJson.RootElement, path, diffs);
         }
         catch
         {
-            if (a.ResponseBody != b.ResponseBody)
-            {
-                diffs.Add(new
-                {
-                    field = "ResponseBody",
-                    local = a.ResponseBody,
-                    remote = b.ResponseBody,
-                    type = "response"
-                });
-            }
+            if (localBody != remoteBody)
+                AddDiff(diffs, path, localBody, remoteBody, GetType(path));
         }
-
-        return diffs;
     }
 
     private static void CompareJson(JsonElement a, JsonElement b, string path, List<object> diffs)
     {
         if (a.ValueKind != b.ValueKind)
         {
-            diffs.Add(new
-            {
-                field = Clean(path),
-                local = a.ToString(),
-                remote = b.ToString(),
-                type = GetType(path)
-            });
+            AddDiff(diffs, Clean(path), a.ToString(), b.ToString(), GetType(path));
             return;
         }
 
         switch (a.ValueKind)
         {
             case JsonValueKind.Object:
-                var remoteProperties = new HashSet<string>();
-
-                foreach (var prop in b.EnumerateObject())
-                {
-                    remoteProperties.Add(prop.Name);
-                }
-
-                foreach (var prop in a.EnumerateObject())
-                {
-                    if (b.TryGetProperty(prop.Name, out var bProp))
-                    {
-                        CompareJson(prop.Value, bProp, $"{path}.{prop.Name}", diffs);
-                        remoteProperties.Remove(prop.Name);
-                    }
-                    else
-                    {
-                        AddMissingDiff($"{path}.{prop.Name}", prop.Value, null, diffs);
-                    }
-                }
-
-                foreach (var propName in remoteProperties)
-                {
-                    AddMissingDiff($"{path}.{propName}", null, b.GetProperty(propName), diffs);
-                }
+                CompareObject(a, b, path, diffs);
                 break;
 
             case JsonValueKind.Array:
-                var lenA = a.GetArrayLength();
-                var lenB = b.GetArrayLength();
-                var len = Math.Min(lenA, lenB);
-
-                for (int i = 0; i < len; i++)
-                {
-                    CompareJson(a[i], b[i], $"{path}[{i}]", diffs);
-                }
-
-                if (lenA != lenB)
-                {
-                    diffs.Add(new
-                    {
-                        field = Clean(path),
-                        local = $"Length: {lenA}",
-                        remote = $"Length: {lenB}",
-                        type = GetType(path)
-                    });
-
-                    if (lenA > lenB)
-                    {
-                        for (int i = lenB; i < lenA; i++)
-                        {
-                            AddMissingDiff($"{path}[{i}]", a[i], null, diffs);
-                        }
-                    }
-                    else
-                    {
-                        for (int i = lenA; i < lenB; i++)
-                        {
-                            AddMissingDiff($"{path}[{i}]", null, b[i], diffs);
-                        }
-                    }
-                }
+                CompareArray(a, b, path, diffs);
                 break;
 
             default:
@@ -158,47 +73,84 @@ internal static class DebugEntryComparer
                 var bVal = b.ToString();
 
                 if (aVal != bVal)
-                {
-                    diffs.Add(new
-                    {
-                        field = Clean(path),
-                        local = aVal,
-                        remote = bVal,
-                        type = GetType(path)
-                    });
-                }
+                    AddDiff(diffs, Clean(path), aVal, bVal, GetType(path));
                 break;
         }
     }
 
+    private static void CompareObject(JsonElement a, JsonElement b, string path, List<object> diffs)
+    {
+        var remoteProperties = new Dictionary<string, JsonElement>();
+        foreach (var prop in b.EnumerateObject())
+            remoteProperties[prop.Name] = prop.Value;
+
+        foreach (var prop in a.EnumerateObject())
+        {
+            var childPath = $"{path}.{prop.Name}";
+
+            if (remoteProperties.Remove(prop.Name, out var remoteProp))
+                CompareJson(prop.Value, remoteProp, childPath, diffs);
+            else
+                AddMissingDiff(childPath, prop.Value, null, diffs);
+        }
+
+        foreach (var prop in remoteProperties)
+            AddMissingDiff($"{path}.{prop.Key}", null, prop.Value, diffs);
+    }
+
+    private static void CompareArray(JsonElement a, JsonElement b, string path, List<object> diffs)
+    {
+        var lenA = a.GetArrayLength();
+        var lenB = b.GetArrayLength();
+        var sharedLength = Math.Min(lenA, lenB);
+
+        for (var i = 0; i < sharedLength; i++)
+            CompareJson(a[i], b[i], $"{path}[{i}]", diffs);
+
+        if (lenA == lenB)
+            return;
+
+        AddDiff(diffs, Clean(path), $"Length: {lenA}", $"Length: {lenB}", GetType(path));
+
+        for (var i = sharedLength; i < lenA; i++)
+            AddMissingDiff($"{path}[{i}]", a[i], null, diffs);
+
+        for (var i = sharedLength; i < lenB; i++)
+            AddMissingDiff($"{path}[{i}]", null, b[i], diffs);
+    }
+
     private static void AddMissingDiff(string path, JsonElement? local, JsonElement? remote, List<object> diffs)
     {
-        diffs.Add(new
-        {
-            field = Clean(path),
-            local = local.HasValue ? local.Value.ToString() : "(missing)",
-            remote = remote.HasValue ? remote.Value.ToString() : "(missing)",
-            type = GetType(path)
-        });
+        AddDiff(
+            diffs,
+            Clean(path),
+            local.HasValue ? local.Value.ToString() : "(missing)",
+            remote.HasValue ? remote.Value.ToString() : "(missing)",
+            GetType(path));
+    }
+
+    private static void AddDiff(List<object> diffs, string field, object? local, object? remote, string type)
+    {
+        diffs.Add(new { field, local, remote, type });
     }
 
     private static string GetType(string path)
     {
-        return path.StartsWith("RequestBody") ? "request" : "response";
+        return path.StartsWith(RequestBodyPath) ? "request" : "response";
     }
 
     private static string Clean(string path)
     {
-        if (path.StartsWith("ResponseBody."))
-            return path.Substring("ResponseBody.".Length);
+        if (path.StartsWith($"{ResponseBodyPath}."))
+            return path.Substring($"{ResponseBodyPath}.".Length);
 
-        if (path == "ResponseBody")
+        if (path == ResponseBodyPath)
             return "";
 
-        if (path.StartsWith("RequestBody."))
-            return path.Substring("RequestBody.".Length);
+        if (path.StartsWith($"{RequestBodyPath}."))
+            return path.Substring($"{RequestBodyPath}.".Length);
 
-        if (path == "RequestBody")
+        if (path == RequestBodyPath)
             return "";
 
         return path;

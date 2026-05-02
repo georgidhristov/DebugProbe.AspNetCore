@@ -12,6 +12,5 @@ internal static class EmbeddedResources
     public static readonly string Details = ResourceLoader.LoadHtml("details.html");
     public static readonly string CompareJs = ResourceLoader.LoadJs("debugprobe-compare.js");
     public static readonly string UiJs = ResourceLoader.LoadJs("debugprobe-ui.js");
-
 }
 

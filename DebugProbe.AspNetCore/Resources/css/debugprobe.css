@@ -1,29 +1,36 @@
-﻿body {
+﻿/* =========================
+   Base
+========================= */
+body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f7f7f7;
 }
 
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: 'Roboto', sans-serif;
-    font-size: 20px;
-    background: #1b1b1b;
-    color: white;
-    padding: 18px;
+h2 {
+    margin-bottom: 10px;
 }
 
-.logo {
-    display: inline-flex;
-    align-items: center;
-    margin-right: 8px;
+h3 {
+    margin-top: 25px;
 }
 
-.logo img {
-    height: 24px;
-    width: auto;
+a {
+    display: inline-block;
+    margin-bottom: 15px;
+    color: #6c5ce7;
+    text-decoration: none;
+}
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+/* =========================
+   Layout
+========================= */
+.container {
+    padding: 20px;
 }
 
 .toolbar {
@@ -33,6 +40,28 @@
     margin-bottom: 10px;
 }
 
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 20px;
+    background: #1b1b1b;
+    color: #fff;
+}
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+    .logo img {
+        height: 24px;
+        width: auto;
+    }
+
 .env {
     font-size: 13px;
     padding: 4px 10px;
@@ -41,17 +70,17 @@
     opacity: 0.9;
 }
 
-.container {
-    padding: 20px;
-}
-
+/* =========================
+   Table
+========================= */
 table {
-    border-collapse: collapse;
     width: 100%;
-    background: white;
+    border-collapse: collapse;
+    background: #fff;
 }
 
-th, td {
+th,
+td {
     padding: 10px;
     border-bottom: 1px solid #eee;
     text-align: left;
@@ -65,26 +94,9 @@ tr:hover {
     background: #f1f1f1;
 }
 
-h2 {
-    margin-bottom: 10px;
-}
-
-h3 {
-    margin-top: 25px;
-}
-
-
-a {
-    display: inline-block;
-    margin-bottom: 15px;
-    color: #6c5ce7;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
+/* =========================
+   Code / JSON
+========================= */
 pre {
     background: #1e1e1e;
     color: #dcdcdc;
@@ -99,9 +111,9 @@ pre {
     position: relative;
 }
 
-.code-block pre {
-    margin: 0;
-}
+    .code-block pre {
+        margin: 0;
+    }
 
 .json-compare {
     display: flex;
@@ -109,16 +121,19 @@ pre {
     align-items: flex-start;
 }
 
-.json-compare > div {
-    flex: 1;
-    min-width: 0;
-}
+    .json-compare > div {
+        flex: 1;
+        min-width: 0;
+    }
 
+/* =========================
+   Diff
+========================= */
 .diff-line {
-    background: rgba(255,200,0,0.12);
-    border-left: 3px solid #f1c40f;
     min-height: 18px;
     padding-left: 6px;
+    background: rgba(255, 200, 0, 0.12);
+    border-left: 3px solid #f1c40f;
 }
 
 .diff-line-added {
@@ -127,55 +142,49 @@ pre {
 }
 
 .diff-line-missing {
-    background:
-        repeating-linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.07) 0,
-            rgba(255, 255, 255, 0.07) 4px,
-            rgba(255, 255, 255, 0.02) 4px,
-            rgba(255, 255, 255, 0.02) 8px
-        );
+    background: repeating-linear-gradient( 135deg, rgba(255, 255, 255, 0.07) 0, rgba(255, 255, 255, 0.07) 4px, rgba(255, 255, 255, 0.02) 4px, rgba(255, 255, 255, 0.02) 8px );
     border-left-color: #666;
 }
 
 .diff-line-changed {
-    background: rgba(255,200,0,0.12);
+    background: rgba(255, 200, 0, 0.12);
     border-left-color: #f1c40f;
+}
+
+/* =========================
+   Buttons
+========================= */
+.copy-btn,
+.btn-clear {
+    font-size: 11px;
+    background: #2d2d2d;
+    color: #ccc;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .copy-btn {
     position: absolute;
     top: 8px;
     right: 8px;
-    font-size: 11px;
     padding: 4px 8px;
-    background: #2d2d2d;
-    color: #ccc;
-    border: 1px solid #444;
-    border-radius: 4px;
-    cursor: pointer;
-
-}
-
-.copy-btn:hover {
-    background: #3a3a3a;
 }
 
 .btn-clear {
     padding: 6px 12px;
     font-size: 13px;
-    background: #2d2d2d;
     color: #fff;
-    border: 1px solid #444;
-    border-radius: 4px;
-    cursor: pointer;
 }
 
+    .copy-btn:hover,
     .btn-clear:hover {
         background: #3a3a3a;
     }
 
-
+/* =========================
+   Status
+========================= */
 .status-ok {
     color: #2ecc71;
     font-weight: bold;
@@ -185,6 +194,3 @@ pre {
     color: #e74c3c;
     font-weight: bold;
 }
-
-
-
