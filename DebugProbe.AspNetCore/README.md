@@ -1,43 +1,87 @@
-# DebugProbe.AspNetCore
+﻿# DebugProbe.AspNetCore ![NuGet](https://img.shields.io/nuget/v/DebugProbe.AspNetCore) ![Downloads](https://img.shields.io/nuget/dt/DebugProbe.AspNetCore) ![License](https://img.shields.io/badge/license-MIT-blue) 
 
-Lightweight tool for inspecting ASP.NET Core HTTP requests and responses.  
-Capture, analyze, and compare API calls directly in your application.
+<p align="left">
+  <img src="Assets/logo.png" width="120" />
+</p>
+
+**Inspect and compare HTTP traffic directly inside your ASP.NET Core app.**
+
+No proxies. No external tools. Just plug in and debug.
+
+
+
+## Why DebugProbe?
+
+- Debug real requests from inside your app
+- No proxy setup or traffic interception
+- See exactly what your API sends and receives
+- Compare environments in seconds
+
+
 
 ## Features
-1. Capture HTTP requests & responses
-2. Inspect headers, query, and body
-3. Pretty JSON formatting
-4. Compare responses across environments
-5. Built-in UI endpoint (/debug)
-6. Minimal setup (no configuration required)
+
+- Capture HTTP requests & responses
+- Inspect headers, query, and body
+- JSON pretty formatting
+- Side-by-side response comparison
+- Built-in UI (`/debug`)
+- Zero configuration
+
+
+
+## Screenshots
+
+### Requests
+![Requests](Assets/requests.png)
+
+### Details
+![Details](Assets/details.png)
+
+### Compare
+![Compare](Assets/compare.png)
+
+---
 
 ## Install
 
-    dotnet add package DebugProbe.AspNetCore
+```bash
+dotnet add package DebugProbe.AspNetCore
+```
 
-**Usage**
+## Quick Start
+```bash
+builder.Services.AddDebugProbe();
 
-Register services
+//Add middleware 
+app.UseDebugProbe();
+```
 
-    builder.Services.AddDebugProbe();
+## Open Debug UI
+Run your application, then open:
 
-Add middleware
-   
-    app.UseDebugProbe();
-      
-Open UI
-   
-    /debug
+http://localhost:{port}/debug
 
-Compare responses
 
-    Use the UI to compare a local request with another environment by providing:
-    - Base URL
-    - Trace ID
+## Compare Responses
 
-Intended for development and debugging only.  
-Do not use in production without proper security (authentication, filtering, access control).
+Use the UI to compare responses across environments:
 
-License
+- Enter **Base URL**
+- Enter **Trace ID**
+- Instantly see differences
+
+## ⚠️ Production Usage
+
+This tool is intended for development.
+
+If used in production:
+
+- Add authentication
+- Restrict access
+- Filter sensitive data
+
+
+## License
 
 MIT
