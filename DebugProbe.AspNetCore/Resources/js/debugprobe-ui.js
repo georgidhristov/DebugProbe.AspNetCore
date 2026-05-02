@@ -1,5 +1,6 @@
 ﻿function copyText(btn) {
-    const text = btn.parentElement.querySelector("pre").innerText;
+    const pre = btn.parentElement.querySelector("pre");
+    const text = pre.dataset.copy ?? pre.innerText;
     navigator.clipboard.writeText(text);
 
     btn.innerText = "Copied";

@@ -14,6 +14,23 @@ namespace DebugProbe.SampleApi.Controllers
             _logger = logger;
         }
 
+        [HttpGet("GetUsers/{count}")]
+        public IActionResult GetUsers(int count)
+        {
+            List<object> users = new List<object>();
+            for (int i = 0; i < count; i++)
+            {
+                users.Add(new
+                {
+                    id = i,
+                    name = i % 2 == 0 ? "John Doe" : "Alice Smith",
+                    email = $"user{count}@example.com",
+                    roles = i % 2 == 0 ? new[] { "Admin", "User" } : new[] { "User" }
+                });
+            }
+
+            return Ok(users);
+        }
 
         [HttpGet("GetUser/{id}")]
         public IActionResult GetUser(int id)

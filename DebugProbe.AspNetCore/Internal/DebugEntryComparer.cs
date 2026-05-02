@@ -90,12 +90,29 @@ internal static class DebugEntryComparer
         switch (a.ValueKind)
         {
             case JsonValueKind.Object:
+                var remoteProperties = new HashSet<string>();
+
+                foreach (var prop in b.EnumerateObject())
+                {
+                    remoteProperties.Add(prop.Name);
+                }
+
                 foreach (var prop in a.EnumerateObject())
                 {
                     if (b.TryGetProperty(prop.Name, out var bProp))
                     {
                         CompareJson(prop.Value, bProp, $"{path}.{prop.Name}", diffs);
+                        remoteProperties.Remove(prop.Name);
                     }
+                    else
+                    {
+                        AddMissingDiff($"{path}.{prop.Name}", prop.Value, null, diffs);
+                    }
+                }
+
+                foreach (var propName in remoteProperties)
+                {
+                    AddMissingDiff($"{path}.{propName}", null, b.GetProperty(propName), diffs);
                 }
                 break;
 
@@ -118,6 +135,21 @@ internal static class DebugEntryComparer
                         remote = $"Length: {lenB}",
                         type = GetType(path)
                     });
+
+                    if (lenA > lenB)
+                    {
+                        for (int i = lenB; i < lenA; i++)
+                        {
+                            AddMissingDiff($"{path}[{i}]", a[i], null, diffs);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = lenA; i < lenB; i++)
+                        {
+                            AddMissingDiff($"{path}[{i}]", null, b[i], diffs);
+                        }
+                    }
                 }
                 break;
 
@@ -137,6 +169,17 @@ internal static class DebugEntryComparer
                 }
                 break;
         }
+    }
+
+    private static void AddMissingDiff(string path, JsonElement? local, JsonElement? remote, List<object> diffs)
+    {
+        diffs.Add(new
+        {
+            field = Clean(path),
+            local = local.HasValue ? local.Value.ToString() : "(missing)",
+            remote = remote.HasValue ? remote.Value.ToString() : "(missing)",
+            type = GetType(path)
+        });
     }
 
     private static string GetType(string path)

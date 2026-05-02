@@ -101,12 +101,46 @@ pre {
 
 .code-block pre {
     margin: 0;
-  
+}
+
+.json-compare {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.json-compare > div {
+    flex: 1;
+    min-width: 0;
 }
 
 .diff-line {
     background: rgba(255,200,0,0.12);
     border-left: 3px solid #f1c40f;
+    min-height: 18px;
+    padding-left: 6px;
+}
+
+.diff-line-added {
+    background: rgba(46, 204, 113, 0.22);
+    border-left-color: #2ecc71;
+}
+
+.diff-line-missing {
+    background:
+        repeating-linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.07) 0,
+            rgba(255, 255, 255, 0.07) 4px,
+            rgba(255, 255, 255, 0.02) 4px,
+            rgba(255, 255, 255, 0.02) 8px
+        );
+    border-left-color: #666;
+}
+
+.diff-line-changed {
+    background: rgba(255,200,0,0.12);
+    border-left-color: #f1c40f;
 }
 
 .copy-btn {
