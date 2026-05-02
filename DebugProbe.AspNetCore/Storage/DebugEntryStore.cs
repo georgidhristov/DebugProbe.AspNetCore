@@ -33,4 +33,9 @@ public class DebugEntryStore
     {
         return _queue.FirstOrDefault(x => x.Id == id);
     }
+
+    public void Clear()
+    {
+        while (_queue.TryDequeue(out _)) { }
+    }
 }

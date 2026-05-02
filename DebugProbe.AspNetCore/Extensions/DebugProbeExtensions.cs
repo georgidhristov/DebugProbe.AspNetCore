@@ -109,6 +109,12 @@ public static class DebugProbeExtensions
             webApp.MapGet("/debug/ui.js", () =>
                 Results.Text(EmbeddedResources.UiJs, "application/javascript")
             ).ExcludeFromDescription();
+
+            webApp.MapPost("/debug/clear", (DebugEntryStore store) =>
+            {
+                store.Clear();
+                return Results.Ok();
+            }).ExcludeFromDescription();
         }
 
         return app;
