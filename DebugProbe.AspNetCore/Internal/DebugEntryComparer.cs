@@ -13,15 +13,45 @@ internal static class DebugEntryComparer
     {
         var diffs = new List<object>();
 
+        // --- Basic differences ---
         if (a.StatusCode != b.StatusCode)
-            diffs.Add(new { field = "StatusCode", local = a.StatusCode, remote = b.StatusCode });
+            diffs.Add(new { field = "Status", local = a.StatusCode, remote = b.StatusCode, type = "meta" });
 
         if (a.Environment != b.Environment)
-            diffs.Add(new { field = "Environment", local = a.Environment, remote = b.Environment });
+            diffs.Add(new { field = "Environment", local = a.Environment, remote = b.Environment, type = "meta" });
 
         if (a.Culture != b.Culture)
-            diffs.Add(new { field = "Culture", local = a.Culture, remote = b.Culture });
+            diffs.Add(new { field = "Culture", local = a.Culture, remote = b.Culture, type = "meta" });
 
+        if (a.DurationMs != b.DurationMs)
+            diffs.Add(new { field = "Duration", local = a.DurationMs, remote = b.DurationMs, type = "meta" });
+
+        // --- Request JSON diff ---
+        if (!string.IsNullOrWhiteSpace(a.RequestBody) || !string.IsNullOrWhiteSpace(b.RequestBody))
+        {
+            try
+            {
+                using var localJson = JsonDocument.Parse(a.RequestBody ?? "{}");
+                using var remoteJson = JsonDocument.Parse(b.RequestBody ?? "{}");
+
+                CompareJson(localJson.RootElement, remoteJson.RootElement, "RequestBody", diffs);
+            }
+            catch
+            {
+                if (a.RequestBody != b.RequestBody)
+                {
+                    diffs.Add(new
+                    {
+                        field = "RequestBody",
+                        local = a.RequestBody,
+                        remote = b.RequestBody,
+                        type = "request"
+                    });
+                }
+            }
+        }
+
+        // --- Response JSON diff ---
         try
         {
             using var localJson = JsonDocument.Parse(a.ResponseBody);
@@ -37,7 +67,8 @@ internal static class DebugEntryComparer
                 {
                     field = "ResponseBody",
                     local = a.ResponseBody,
-                    remote = b.ResponseBody
+                    remote = b.ResponseBody,
+                    type = "response"
                 });
             }
         }
@@ -51,9 +82,10 @@ internal static class DebugEntryComparer
         {
             diffs.Add(new
             {
-                field = path.Replace("ResponseBody", ""),
+                field = Clean(path),
                 local = a.ToString(),
-                remote = b.ToString()
+                remote = b.ToString(),
+                type = GetType(path)
             });
             return;
         }
@@ -71,10 +103,24 @@ internal static class DebugEntryComparer
                 break;
 
             case JsonValueKind.Array:
-                var len = Math.Min(a.GetArrayLength(), b.GetArrayLength());
+                var lenA = a.GetArrayLength();
+                var lenB = b.GetArrayLength();
+                var len = Math.Min(lenA, lenB);
+
                 for (int i = 0; i < len; i++)
                 {
                     CompareJson(a[i], b[i], $"{path}[{i}]", diffs);
+                }
+
+                if (lenA != lenB)
+                {
+                    diffs.Add(new
+                    {
+                        field = Clean(path),
+                        local = $"Length: {lenA}",
+                        remote = $"Length: {lenB}",
+                        type = GetType(path)
+                    });
                 }
                 break;
 
@@ -82,15 +128,39 @@ internal static class DebugEntryComparer
                 var aVal = a.ToString();
                 var bVal = b.ToString();
 
-                diffs.Add(new
+                if (aVal != bVal)
                 {
-                    field = path.Replace("ResponseBody", ""),
-                    local = aVal,
-                    remote = bVal,
-                    isDiff = aVal != bVal
-                });
+                    diffs.Add(new
+                    {
+                        field = Clean(path),
+                        local = aVal,
+                        remote = bVal,
+                        type = GetType(path)
+                    });
+                }
                 break;
         }
     }
-}
 
+    private static string GetType(string path)
+    {
+        return path.StartsWith("RequestBody") ? "request" : "response";
+    }
+
+    private static string Clean(string path)
+    {
+        if (path.StartsWith("ResponseBody."))
+            return path.Substring("ResponseBody.".Length);
+
+        if (path == "ResponseBody")
+            return "";
+
+        if (path.StartsWith("RequestBody."))
+            return path.Substring("RequestBody.".Length);
+
+        if (path == "RequestBody")
+            return "";
+
+        return path;
+    }
+}

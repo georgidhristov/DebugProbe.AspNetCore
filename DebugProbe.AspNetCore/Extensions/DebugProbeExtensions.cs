@@ -89,9 +89,22 @@ public static class DebugProbeExtensions
 
                 return Results.Ok(new
                 {
+                    method = new { local = local.Method, remote = remote.Method },
+                    path = new { local = local.Path, remote = remote.Path },
                     status = new { local = local.StatusCode, remote = remote.StatusCode },
+                    duration = new { local = local.DurationMs, remote = remote.DurationMs },
+
                     environment = new { local = local.Environment, remote = remote.Environment },
                     culture = new { local = local.Culture, remote = remote.Culture },
+                    serverTime = new
+                    {
+                        local = local.ServerTimeUtc == default ? "-" : local.ServerTimeUtc.ToString("O"),
+                        remote = remote.ServerTimeUtc == default ? "-" : remote.ServerTimeUtc.ToString("O")
+                    },
+
+                    requestBody = new { local = local.RequestBody ?? "", remote = remote.RequestBody ?? "" },
+                    responseBody = new { local = local.ResponseBody ?? "", remote = remote.ResponseBody ?? "" },
+
                     diffs = diff
                 });
             }).ExcludeFromDescription();
