@@ -88,6 +88,16 @@ pre {
     position: relative;
 }
 
+.code-block pre {
+    margin: 0;
+  
+}
+
+.diff-line {
+    background: rgba(255,200,0,0.12);
+    border-left: 3px solid #f1c40f;
+}
+
 .copy-btn {
     position: absolute;
     top: 8px;

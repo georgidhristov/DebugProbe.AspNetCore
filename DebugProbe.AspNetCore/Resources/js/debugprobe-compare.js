@@ -110,10 +110,9 @@ function renderSideBySideJson(data, changedFields) {
 function renderJsonWithHighlight(json, changedFields) {
     if (!json || json.trim() === "" || json === "{}") {
         return `
-            <div style="position:relative;">
-                <button class="copy-btn" style="position:absolute; top:5px; right:5px;"
-                        onclick="copyText(this)">Copy</button>
-                <pre style="margin:0; color:#888;">(empty)</pre>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+                <pre>(empty)</pre>
             </div>
         `;
     }
@@ -124,10 +123,9 @@ function renderJsonWithHighlight(json, changedFields) {
 
         if (!pretty || pretty === "{}") {
             return `
-                <div style="position:relative;">
-                    <button class="copy-btn" style="position:absolute; top:5px; right:5px;"
-                            onclick="copyText(this)">Copy</button>
-                    <pre style="margin:0; color:#888;">(empty)</pre>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyText(this)">Copy</button>
+                    <pre>(empty)</pre>
                 </div>
             `;
         }
@@ -140,26 +138,20 @@ function renderJsonWithHighlight(json, changedFields) {
                 return line.includes(`"${key}"`);
             });
 
-            return `<div style="${isChanged
-                ? 'background:rgba(255,200,0,0.12); border-left:3px solid #f1c40f; padding-left:6px;'
-                : ''}">${line}</div>`;
+            return `<div class="${isChanged ? 'diff-line' : ''}">${line}</div>`;
         }).join('');
 
         return `
-            <div style="position:relative;">
-                <button class="copy-btn" style="position:absolute; top:5px; right:5px;"
-                        onclick="copyText(this)">Copy</button>
-                <pre style="margin:0; color:#ddd; max-height:400px; overflow:auto;">
-                    ${content}
-                </pre>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+                <pre>${content}</pre>
             </div>
         `;
     } catch {
         return `
-            <div style="position:relative;">
-                <button class="copy-btn" style="position:absolute; top:5px; right:5px;"
-                        onclick="copyText(this)">Copy</button>
-                <pre style="margin:0; color:#888;">(empty)</pre>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+                <pre>(empty)</pre>
             </div>
         `;
     }
