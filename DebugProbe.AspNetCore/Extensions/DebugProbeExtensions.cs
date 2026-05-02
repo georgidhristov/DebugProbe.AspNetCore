@@ -92,15 +92,16 @@ public static class DebugProbeExtensions
                     method = new { local = local.Method, remote = remote.Method },
                     path = new { local = local.Path, remote = remote.Path },
                     status = new { local = local.StatusCode, remote = remote.StatusCode },
-                    duration = new { local = local.DurationMs, remote = remote.DurationMs },
+
+                    requestTime = new
+                    {
+                        local = local.RequestTimeUtc.ToLocalTime().ToString("HH:mm:ss"),
+                        remote = remote.RequestTimeUtc.ToLocalTime().ToString("HH:mm:ss"),
+                    },
 
                     environment = new { local = local.Environment, remote = remote.Environment },
                     culture = new { local = local.Culture, remote = remote.Culture },
-                    serverTime = new
-                    {
-                        local = local.ServerTimeUtc == default ? "-" : local.ServerTimeUtc.ToString("O"),
-                        remote = remote.ServerTimeUtc == default ? "-" : remote.ServerTimeUtc.ToString("O")
-                    },
+                 
 
                     requestBody = new { local = local.RequestBody ?? "", remote = remote.RequestBody ?? "" },
                     responseBody = new { local = local.ResponseBody ?? "", remote = remote.ResponseBody ?? "" },

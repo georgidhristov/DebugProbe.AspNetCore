@@ -23,9 +23,6 @@ internal static class DebugEntryComparer
         if (a.Culture != b.Culture)
             diffs.Add(new { field = "Culture", local = a.Culture, remote = b.Culture, type = "meta" });
 
-        if (a.DurationMs != b.DurationMs)
-            diffs.Add(new { field = "Duration", local = a.DurationMs, remote = b.DurationMs, type = "meta" });
-
         // --- Request JSON diff ---
         if (!string.IsNullOrWhiteSpace(a.RequestBody) || !string.IsNullOrWhiteSpace(b.RequestBody))
         {

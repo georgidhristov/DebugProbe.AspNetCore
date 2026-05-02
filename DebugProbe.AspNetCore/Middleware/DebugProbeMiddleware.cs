@@ -41,6 +41,7 @@ public class DebugProbeMiddleware
 
         await _next(context);
 
+
         ms.Position = 0;
         var responseBody = await new StreamReader(ms).ReadToEndAsync();
         ms.Position = 0;
@@ -65,7 +66,8 @@ public class DebugProbeMiddleware
             Timestamp = DateTime.UtcNow,
 
             Environment = EnvironmentUtils.TryGetEnvironment(),
-            Culture = CultureInfo.CurrentCulture.Name
+            Culture = CultureInfo.CurrentCulture.Name,
+            RequestTimeUtc = DateTime.UtcNow,
         });
     }
 

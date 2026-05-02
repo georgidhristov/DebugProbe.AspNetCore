@@ -10,14 +10,13 @@ public class DebugEntry
     public string? Query { get; set; }
     public string? RequestUrl { get; set; }
     public string RequestBody { get; set; } = default!;
+    public DateTime RequestTimeUtc { get; set; }
+
 
     // Response
     public int StatusCode { get; set; }
     public string ResponseBody { get; set; } = default!;
 
-    // Metrics
-    public long DurationMs { get; set; }         
-    public DateTime ServerTimeUtc { get; set; }   
 
     // Context
     public string Environment { get; set; } = default!;

@@ -32,15 +32,14 @@
 
         const environment = [
             { field: "Environment", local: result.environment?.local, remote: result.environment?.remote },
-            { field: "Culture", local: result.culture?.local, remote: result.culture?.remote },
-            { field: "Server Time", local: result.serverTime?.local, remote: result.serverTime?.remote }
+            { field: "Culture", local: result.culture?.local, remote: result.culture?.remote }
         ];
 
         const overview = [
             { field: "Method", local: result.method?.local, remote: result.method?.remote },
             { field: "Path", local: result.path?.local, remote: result.path?.remote },
             { field: "Status", local: result.status?.local, remote: result.status?.remote },
-            { field: "Duration (ms)", local: result.duration?.local, remote: result.duration?.remote }
+            { field: "Request Time", local: result.requestTime?.local, remote: result.requestTime?.remote },
         ];
 
         function renderSection(title, rows) {
@@ -109,13 +108,33 @@ function renderSideBySideJson(data, changedFields) {
 }
 
 function renderJsonWithHighlight(json, changedFields) {
+    if (!json || json.trim() === "" || json === "{}") {
+        return `
+            <div style="position:relative;">
+                <button class="copy-btn" style="position:absolute; top:5px; right:5px;"
+                        onclick="copyText(this)">Copy</button>
+                <pre style="margin:0; color:#888;">(empty)</pre>
+            </div>
+        `;
+    }
+
     try {
         const obj = JSON.parse(json);
         const pretty = JSON.stringify(obj, null, 2);
+
+        if (!pretty || pretty === "{}") {
+            return `
+                <div style="position:relative;">
+                    <button class="copy-btn" style="position:absolute; top:5px; right:5px;"
+                            onclick="copyText(this)">Copy</button>
+                    <pre style="margin:0; color:#888;">(empty)</pre>
+                </div>
+            `;
+        }
+
         const lines = pretty.split('\n');
 
-        return `<pre style="margin:0; color:#ddd;">` + lines.map(line => {
-
+        const content = lines.map(line => {
             const isChanged = changedFields.some(f => {
                 const key = f.split('.').pop();
                 return line.includes(`"${key}"`);
@@ -124,9 +143,24 @@ function renderJsonWithHighlight(json, changedFields) {
             return `<div style="${isChanged
                 ? 'background:rgba(255,200,0,0.12); border-left:3px solid #f1c40f; padding-left:6px;'
                 : ''}">${line}</div>`;
+        }).join('');
 
-        }).join('') + `</pre>`;
+        return `
+            <div style="position:relative;">
+                <button class="copy-btn" style="position:absolute; top:5px; right:5px;"
+                        onclick="copyText(this)">Copy</button>
+                <pre style="margin:0; color:#ddd; max-height:400px; overflow:auto;">
+                    ${content}
+                </pre>
+            </div>
+        `;
     } catch {
-        return `<pre>${json}</pre>`;
+        return `
+            <div style="position:relative;">
+                <button class="copy-btn" style="position:absolute; top:5px; right:5px;"
+                        onclick="copyText(this)">Copy</button>
+                <pre style="margin:0; color:#888;">(empty)</pre>
+            </div>
+        `;
     }
 }
