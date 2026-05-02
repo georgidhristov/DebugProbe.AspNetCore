@@ -1,7 +1,7 @@
 ﻿# DebugProbe.AspNetCore ![NuGet](https://img.shields.io/nuget/v/DebugProbe.AspNetCore) ![Downloads](https://img.shields.io/nuget/dt/DebugProbe.AspNetCore) ![License](https://img.shields.io/badge/license-MIT-blue) 
 
 <p align="left">
-  <img src="../Assets/logo.png" width="120" />
+  <img src="https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/master/Assets/logo.png" width="120" />
 </p>
 
 **Inspect and compare HTTP traffic directly inside your ASP.NET Core app.**
@@ -33,13 +33,13 @@ No proxies. No external tools. Just plug in and debug.
 ## Screenshots
 
 ### Requests
-![Requests](../Assets/requests.png)
+![Requests](https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/master/Assets/requests.png)
 
 ### Details
-![Details](../Assets/details.png)
+![Details](https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/master/Assets/details.png)
 
 ### Compare
-![Compare](../Assets/compare.png)
+![Compare](https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/master/Assets/compare.png)
 
 ---
 
