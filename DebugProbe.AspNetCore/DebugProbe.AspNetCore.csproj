@@ -30,6 +30,8 @@
 		<EmbeddedResource Include="Resources\**\*.css" />
 		<EmbeddedResource Include="Resources\js\debugprobe-compare.js" />
 		<EmbeddedResource Include="Resources\js\debugprobe-ui.js" />
+		<EmbeddedResource Include="Assets\logo.PNG" />
+		<EmbeddedResource Include="Assets\favicon.ico" />
 	</ItemGroup>
 
 	<ItemGroup>

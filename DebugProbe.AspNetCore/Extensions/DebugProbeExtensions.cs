@@ -129,6 +129,42 @@ public static class DebugProbeExtensions
                 store.Clear();
                 return Results.Ok();
             }).ExcludeFromDescription();
+
+            webApp.Map("/debug/logo.png", async ctx =>
+            {
+                ctx.Response.ContentType = "image/png";
+
+                var asm = typeof(DebugProbeMiddleware).Assembly;
+                using var stream = asm.GetManifestResourceStream("DebugProbe.AspNetCore.Assets.logo.PNG");
+
+                if (stream == null)
+                {
+                    ctx.Response.StatusCode = 404;
+                    return;
+                }
+
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+
+                await ctx.Response.Body.WriteAsync(bytes);
+            }).ExcludeFromDescription();
+
+            webApp.Map("/debug/favicon.ico", async ctx =>
+            {
+                ctx.Response.ContentType = "image/x-icon";
+
+                var asm = typeof(DebugProbeMiddleware).Assembly;
+                using var stream = asm.GetManifestResourceStream("DebugProbe.AspNetCore.Assets.favicon.ico");
+
+                if (stream == null)
+                {
+                    ctx.Response.StatusCode = 404;
+                    return;
+                }
+
+                await stream.CopyToAsync(ctx.Response.Body);
+            }).ExcludeFromDescription(); ;
         }
 
         return app;

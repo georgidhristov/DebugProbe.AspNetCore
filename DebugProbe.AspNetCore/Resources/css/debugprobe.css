@@ -15,6 +15,17 @@
     padding: 18px;
 }
 
+.logo {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+.logo img {
+    height: 24px;
+    width: auto;
+}
+
 .toolbar {
     display: flex;
     justify-content: space-between;
