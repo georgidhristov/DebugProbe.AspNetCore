@@ -6,11 +6,11 @@
 		<Nullable>enable</Nullable>
 
 		<PackageId>DebugProbe.AspNetCore</PackageId>
-		<Version>1.1.0</Version>
+		<Version>1.2.0</Version>
 
 		<Authors>Georgi Hristov</Authors>
-		<Description>Lightweight ASP.NET Core request/response debugging tool</Description>
-		<PackageTags>aspnetcore;debug;diagnostics;middleware</PackageTags>
+		<Description>Debug and inspect HTTP requests and responses inside ASP.NET Core apps. Capture, analyze, and compare API calls with a built-in UI.</Description>
+		<PackageTags>aspnetcore;debugging;http;middleware;api;diagnostics;</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 
 		<RepositoryUrl>https://github.com/georgidhristov/DebugProbe.AspNetCore</RepositoryUrl>
