@@ -133,7 +133,7 @@ public static class DebugProbeExtensions
             }).ExcludeFromDescription();
 
             webApp.Map("/debug/logo.png", ctx =>
-                WriteEmbeddedAsset(ctx, "DebugProbe.AspNetCore.Assets.logo.PNG", "image/png")
+                WriteEmbeddedAsset(ctx, "DebugProbe.AspNetCore.Assets.logo-full.PNG", "image/png")
             ).ExcludeFromDescription();
 
             webApp.Map("/debug/favicon.ico", ctx =>

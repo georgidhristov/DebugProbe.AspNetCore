@@ -1,8 +1,6 @@
-﻿# DebugProbe.AspNetCore ![NuGet](https://img.shields.io/nuget/v/DebugProbe.AspNetCore) ![Downloads](https://img.shields.io/nuget/dt/DebugProbe.AspNetCore) ![License](https://img.shields.io/badge/license-MIT-blue) 
+﻿# DebugProbe.AspNetCore 
 
-<p align="left">
-  <img src="https://raw.githubusercontent.com/georgidhristov/DebugProbe.AspNetCore/master/Assets/logo.png" width="120" />
-</p>
+
 
 **Inspect and compare HTTP traffic directly inside your ASP.NET Core app.**
 

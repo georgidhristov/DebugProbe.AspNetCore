@@ -52,6 +52,7 @@ internal static class HtmlRenderer
             .Replace("{{method}}", Encode(x.Method))
             .Replace("{{path}}", Encode(pathWithQuery))
             .Replace("{{status}}", x.StatusCode.ToString())
+            .Replace("{{tradeId}}", x.Id.ToString())
             .Replace("{{time}}", x.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
             .Replace("{{local}}", x.Timestamp.ToLocalTime().ToString("HH:mm:ss"))
             .Replace("{{env}}", Encode(x.Environment))

@@ -5,8 +5,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
+		<PackageIcon>icon.png</PackageIcon>
 		<PackageId>DebugProbe.AspNetCore</PackageId>
-		<Version>1.2.0</Version>
+		<Version>1.2.2</Version>
 
 		<Authors>Georgi Hristov</Authors>
 		<Description>Debug and inspect HTTP requests and responses inside ASP.NET Core apps. Capture, analyze, and compare API calls with a built-in UI.</Description>
@@ -30,7 +31,7 @@
 		<EmbeddedResource Include="Resources\**\*.css" />
 		<EmbeddedResource Include="Resources\js\debugprobe-compare.js" />
 		<EmbeddedResource Include="Resources\js\debugprobe-ui.js" />
-		<EmbeddedResource Include="Assets\logo.PNG" />
+		<EmbeddedResource Include="Assets\logo-full.PNG" />
 		<EmbeddedResource Include="Assets\favicon.ico" />
 	</ItemGroup>
 
